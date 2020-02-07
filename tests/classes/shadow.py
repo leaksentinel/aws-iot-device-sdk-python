@@ -120,7 +120,7 @@ class ShadowItem:
         elif self.type == ShadowItemType.INT:
             return int(string)
         else:
-            return value
+            return string
 
 
 class ShadowItems:

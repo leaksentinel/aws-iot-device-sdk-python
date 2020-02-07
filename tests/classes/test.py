@@ -176,8 +176,11 @@ class Test:
     def verify_initial_get(self):
         # look for flag that says 'get' was received
         if globals.get_accepted:
-            # yes, we got a 'get', see if values have taken effect
+            # yes, we got a 'get', check that our two valve params are not undfined
             globals.get_accepted = False
+            self.check_valve_params()
+
+            # now see if values have taken effect
             item1 = shadow_items.wifiConnectNotFlowing
             item2 = shadow_items.wifiConnectSleepMultiplier
             if item1.get_reported_value_from_json_dict(globals.payload_dict) and\
@@ -349,6 +352,27 @@ class Test:
             self.cycle_timed_out = True
         else:
             self.cycle_timed_out = False
+
+    def check_valve_params(self):
+        text = ""
+        item1 = shadow_items.valveState
+        item2 = shadow_items.requestedValveStateReq
+        if item1.get_reported_value_from_json_dict(globals.payload_dict) and \
+                item2.get_reported_value_from_json_dict(globals.payload_dict):
+            if item1.reported_value == "0":
+                if item2.reported_value == "0":
+                    text = colored("FAIL - Both valve_state and valve_state req are in an unknown state.\n" + \
+                                   "Please reset both to a known state before you run this app.", 'red')
+                else:
+                    text = colored("FAIL - valve_state is in an unknown state.\n" + \
+                                   "Please reset valve_state to a known state before you run this app.", 'red')
+            elif item2.reported_value == "0":
+                    text = colored("FAIL - valve_state_req is in an unknown state.\n" + \
+                                   "Please reset valve_state_req to a known state before you run this app.", 'red')
+            if not text == "":
+                print(text)
+                print(globals.terminator)
+                exit(3)
 
     def format_time(self, td: datetime.timedelta):
         str = ""

@@ -57,6 +57,7 @@ class Test1(Test):
             duration = datetime.datetime.now() - self.iteration_start
             print("\rShadow update received (" + self.format_time(duration) + ")")
             print(globals.separator)
+            self.check_valve_params()
             self.advance()
 
     # step 8
@@ -70,7 +71,7 @@ class Test1(Test):
 # callback functions
 # call us back whenever an updated is accepted, regardless of token
 def callback_shadow_update(payload, responseStatus, token):
-    print("\r" + responseStatus + "                        ")
+    # print("\r" + responseStatus + "                        ")
     payloadDict = json.loads(payload)
     # print("state: " + str(payloadDict["state"]))
     globals.update_accepted = True

@@ -93,6 +93,7 @@ class TestSuite:
             if self.current_status == TestStatus.IDLE:
                 self.current_status = TestStatus.RUNNING
                 self.current_test_index = 0
+                print(globals.terminator)
                 self.run_test(self.initial_update_was_done)
 
             # if a test is currently running...
