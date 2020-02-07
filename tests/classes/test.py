@@ -7,7 +7,7 @@ from time import sleep
 from enum import Enum
 import datetime
 import json
-from classes.globes import globes
+from classes.globals import globals
 from classes.shadow import shadow_items
 from termcolor import colored
 
@@ -30,7 +30,7 @@ class Test:
         self.args = None                        # arguments from the command line
         self.shadow_handler = None              # aws iot shadow handler object
 
-        # these values are initialized when we parse the command line
+        # these values are set from parsing the command line
         self.connect_not_flowing = 30           # shadow value written to shadow at start of first test
         self.sleep_multiplier = 4               # shadow value written to shadow at start of first test
         self.ac_power = True                    # the device is plugged in, i.e. not running on batteries
@@ -78,7 +78,7 @@ class Test:
         if self.cycles < 1 or self.cycles > 99:
             self.cycles = 2
         if self.args.ac_power:
-            self.cycle_duration = 61.0
+            self.cycle_duration = 11.0
         else:
             self.cycle_duration = self.cycles * (self.connectNotFlowing * self.sleepMultiplier + 60)
 
@@ -93,9 +93,9 @@ class Test:
             print("iterations: " + str(self.iterations) + ", cycles: " + str(self.cycles) +
                 ", delay: " + str(self.delay) + ", offset: " + str(self.offset))
         print("Cycle time used for this test: " + str(self.cycle_duration))
-        print(globes.separator)
+        print(globals.separator)
 
-    # run one test -- starts our main "resume()" loop
+    # run one test -- starts our main state machine, "resume()"
     def run(self, args, shadow_handler, skip_initial_update):
         self.args = args
         self.shadow_handler = shadow_handler
@@ -103,7 +103,7 @@ class Test:
         self.step = 0
         self.resume()
 
-    # go on to next step in "resume()" loop
+    # go on to next step in "resume()" state machine
     def advance(self):
         self.step += 1
 
@@ -114,7 +114,7 @@ class Test:
         self.test_start = datetime.datetime.now()
         self.step = 0
         self.iteration = 0
-        if (self.skip_initial_update):
+        if (self.skip_initial_update):  # we only have to do the initial update for the first test
             self.step = 5
         else:
             self.advance()
@@ -131,15 +131,16 @@ class Test:
         item2 = shadow_items.wifiConnectSleepMultiplier
         item2.desired_value = self.sleep_multiplier
         json_str = item1.set_desired_values_to_json_str(item2)
-        globes.update_accepted = False
-        print("Sending connect_not_flowing and sleep_multiplier to shadow")
+        globals.update_accepted = False
+        print("Sending initial 'update' request to Shadow")
         self.shadow_handler.shadowUpdate(json_str, callback_initial_update, 5)
         self.advance()
 
     # step 2
     def verify_initial_update(self):
-        # callback sets a flag when update accept message comes in
-        if globes.update_accepted:
+        # the callback sets update_accepted flag for us when update accept message comes in
+        if globals.update_accepted:
+            globals.update_accepted = False
             print("Initial 'update' request was accepted")
             self.advance()
             return
@@ -151,40 +152,38 @@ class Test:
             print("\rTimeout: no update after " + str(self.cycle_duration) + " seconds")
             self.cycle += 1
             if self.cycle >= self.cycles:
-                globes.abort_flag = True
-                globes.abort_reason = "initial update was never accepted"
+                globals.abort_flag = True
+                globals.abort_reason = "initial update was never accepted"
             else:
                 # start another cycle
                 print("Starting cycle " + str(self.cycle + 1))
                 self.cycle_start = datetime.datetime.now()
 
-    # step 3 send "get" request
+    # step 3 send an empty "get" request to fetch the entire shadow
     def send_initial_get(self):
         self.cycle = 0
         self.cycle_start = datetime.datetime.now()
         self.cycle_end = None
-
-        # send a blank message to "get" topic, which will fetch the whole shadow
         print("Sending 'get' request to the Shadow")
-        globes.get_accepted = False
+        globals.get_accepted = False
         self.shadow_handler.shadowGet(callback_initial_get, 5)
         sleep(2)
-
         self.advance()
 
     # step 4
     def verify_initial_get(self):
         # look for flag that says 'get' was received
-        if globes.get_accepted:
+        if globals.get_accepted:
             # yes, we got a 'get', see if values have taken effect
-            globes.get_accepted = False
+            globals.get_accepted = False
             item1 = shadow_items.wifiConnectNotFlowing
             item2 = shadow_items.wifiConnectSleepMultiplier
-            if item1.get_reported_value_from_json_dict(globes.payload_dict) and\
-            item2.get_reported_value_from_json_dict(globes.payload_dict):
+            if item1.get_reported_value_from_json_dict(globals.payload_dict) and\
+            item2.get_reported_value_from_json_dict(globals.payload_dict):
                 if item1.desired_value == item1.reported_value and item2.desired_value == item2.reported_value:
-                    print("connect_not_flowing and sleep_multiplier have been set to desired values")
-                    print(globes.separator)
+                    print("connect_not_flowing = " + str(item1.reported_value)\
+                          + ", sleep_multiplier = " + str(item2.reported_value))
+                    print(globals.separator)
                     self.advance()
                     return
 
@@ -195,8 +194,8 @@ class Test:
             print("\rTimeout: no update after " + str(self.cycle_duration) + " seconds")
             self.cycle += 1
             if self.cycle >= self.cycles:
-                globes.abort_flag = True
-                globes.abort_reason = "initial get was never accepted"
+                globals.abort_flag = True
+                globals.abort_reason = "initial get was never accepted"
             else:
                 # start another cycle
                 print("Starting cycle " + str(self.cycle + 1))
@@ -231,7 +230,7 @@ class Test:
                 text = colored("FAIL - failed to update after " + str(self.cycles) + " cycles", 'red')
                 print(text)
                 self.failures += 1
-                print(globes.separator)
+                print(globals.separator)
                 self.advance()
 
             else:
@@ -260,7 +259,7 @@ class Test:
 
     # abnormal termination
     def abort_test(self):
-        text = colored("Test aborted: " + globes.abort_reason)
+        text = colored("Test aborted: " + globals.abort_reason)
         print(text)
         exit(2)
 
@@ -268,7 +267,7 @@ class Test:
     def resume(self):
         while True:
             # always check to see if we've aborted
-            if globes.abort_flag:
+            if globals.abort_flag:
                 self.abort_test()
                 return
 
@@ -330,14 +329,14 @@ class Test:
 
     def check_for_valve_state_unknown(self):
         item = shadow_items.valveState
-        if item.set_reported_value_from_json(globes.payload_dict):
+        if item.set_reported_value_from_json(globals.payload_dict):
             if item.reported_value == 0:
                 self.status = TestStatus.ABORTED
                 self.abort_reason = "valve_state is set to 0 (unknown) -- please fix before running tests"
                 return
 
         item = shadow_items.requestedValveStateReq
-        if item.set_reported_value_from_json(globes.payload_dict):
+        if item.set_reported_value_from_json(globals.payload_dict):
             if item.reported_value == 0:
                 self.status = TestStatus.ABORTED
                 self.abort_reason = "valve_state_req is set to 0 (unknown) -- please fix before running tests"
@@ -346,30 +345,30 @@ class Test:
 def callback_initial_update(payload, responseStatus, token):
     if responseStatus == "timeout":
         print("Update request " + token + " time out!")
-        globes.abort_flag = True
-        globes.abort_reason = "Initial update request timed out"
+        globals.abort_flag = True
+        globals.abort_reason = "Initial update request timed out"
         return
 
     if responseStatus == "accepted":
-        globes.update_accepted = True
+        globals.update_accepted = True
 
     if responseStatus == "rejected":
         print("Update request " + token + " rejected!")
-        globes.abort_flag = True
-        globes.abort_reason = "Error - shadow rejected our initial update request"
+        globals.abort_flag = True
+        globals.abort_reason = "Error - shadow rejected our initial update request"
 
 def callback_initial_get(payload, responseStatus, token):
     if responseStatus == "timeout":
         print("Get request " + token + " time out!")
-        globes.abort_flag = True
-        globes.abort_reason = "Initial get request timed out"
+        globals.abort_flag = True
+        globals.abort_reason = "Initial get request timed out"
         return
 
     if responseStatus == "accepted":
-        globes.get_accepted = True
-        globes.payload_dict = json.loads(payload)
+        globals.get_accepted = True
+        globals.payload_dict = json.loads(payload)
 
     if responseStatus == "rejected":
         print("Get request " + token + " rejected!")
-        globes.abort_flag = True
-        globes.abort_reason = "Error - shadow rejected our initial get request"
+        globals.abort_flag = True
+        globals.abort_reason = "Error - shadow rejected our initial get request"

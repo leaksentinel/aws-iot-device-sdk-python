@@ -7,7 +7,7 @@ import json
 import datetime
 
 from classes.shadow import shadow_items
-
+from classes.globals import globals
 from classes.test import Test
 
 test_params = [
@@ -36,11 +36,10 @@ class Test2(Test):
     # step 0
     def prepare_for_test(self):
         super().prepare_for_test()
-        self.advance()
 
     # step 1
-    def send_initial_request(self):
-        super().send_initial_request()
+    def send_initial_update(self):
+        super().send_initial_update()
 
         # send "connect_not_flowing" and "sleep_multiplier" values to shadow
         dict = {'connect_not_flowing': str(self.args.connect_not_flowing),
@@ -55,14 +54,14 @@ class Test2(Test):
         self.advance()
 
     # step 2
-    def verify_initial_request(self):
+    def verify_initial_update(self):
         if globals.update_accepted:
             globals.update_accepted = False
             self.advance()
 
         else:
             # check for time out
-            super().verify_initial_request()
+            super().verify_initial_update()
 
 
     # step 3

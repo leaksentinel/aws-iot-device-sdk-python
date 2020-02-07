@@ -15,7 +15,7 @@ from tests.test4 import Test4
 from classes.test import TestStatus
 from classes.args import Args
 from classes.connection import Connection
-from classes.globes import globes
+from classes.globals import globals
 
 # configure logging
 logger = logging.getLogger("AWSIoTPythonSDK.core")
@@ -46,7 +46,8 @@ class TestSuite:
                             help="Seconds to wait before connecting", default=30)
         parser.add_argument("-s", "--sleep_multiplier", action="store", dest="sleep_multiplier", type=int,
                             help="Multiply this by connectNotFlowing to get seconds until sleep", default=4)
-        parser.add_argument("-a", "--ac_power", action="store_true", dest="ac_power", default=True, help="AC power is connected")
+        parser.add_argument("-a", "--ac_power", action="store_true", dest="ac_power", default=True,
+                            help="AC power is connected")
         parser.add_argument("-i", "--iterations", action="store", dest="iterations", type=int,
                             help="Number of times to iterate test", default=10)
         parser.add_argument("-c", "--cycles", action="store", dest="cycles", type=int,
@@ -130,7 +131,7 @@ class TestSuite:
         else:
             text = colored("PASS - " + test.name + " passed all tests", 'green')
             print(text)
-        print(globes.terminator)
+        print(globals.terminator)
 
 # create app object -- this kicks everything off
 if __name__ == "__main__":

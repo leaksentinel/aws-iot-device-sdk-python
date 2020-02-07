@@ -4,7 +4,7 @@
 # Copyright (c) 2020 LeakSentinel, Inc.
 
 # these are mostly used by callback functions
-class Globes:
+class Globals:
     def __init__(self):
         # global flags used by callbacks
         self.update_accepted = False
@@ -19,4 +19,4 @@ class Globes:
 
         self.payload_dict = None
 
-globes = Globes()
+globals = Globals()

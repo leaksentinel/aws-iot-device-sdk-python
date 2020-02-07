@@ -7,7 +7,7 @@ import json
 import datetime
 import termcolor
 from classes.test import Test
-from classes.globes import globes
+from classes.globals import globals
 
 
 class Test1(Test):
@@ -22,7 +22,7 @@ class Test1(Test):
 
     # step 1
     def send_initial_update(self):
-        super().send_initial_update()
+        super(). send_initial_update()
 
     # step 2
     def verify_initial_update(self):
@@ -40,6 +40,8 @@ class Test1(Test):
     def prepare_for_iteration(self):
         super().prepare_for_iteration()
         print("\rWaiting for device to update the shadow, iteration " + str(self.iteration + 1))
+        # register to receive all update messages
+        self.shadow_handler.shadowRegisterUpdateCallback(callback_shadow_update)
         self.advance()
 
     # step 6
@@ -52,11 +54,11 @@ class Test1(Test):
     def verify_one_iteration(self):
         super().verify_one_iteration()
 
-        if globes.update_accepted:
-            globes.update_accepted = False
+        if globals.update_accepted:
+            globals.update_accepted = False
             duration = datetime.datetime.now() - self.iteration_start
             print("\rShadow update received (" + self.format_time(duration) + ")")
-            print(globes.separator)
+            print(globals.separator)
             self.advance()
 
     # step 8
@@ -73,5 +75,5 @@ def callback_shadow_update(payload, responseStatus, token):
     print("\r" + responseStatus + "                        ")
     payloadDict = json.loads(payload)
     # print("state: " + str(payloadDict["state"]))
-    globes.update_accepted = True
+    globals.update_accepted = True
 

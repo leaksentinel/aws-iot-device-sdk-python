@@ -8,7 +8,7 @@ import datetime
 from time import sleep
 
 from classes.test import Test
-from classes.globes import globes
+from classes.globals import globals
 from classes.button import pwrButton, wifiButton
 
 class Test3(Test):
@@ -96,5 +96,5 @@ def callback_shadow_update(payload, responseStatus, token):
     print("\r" + responseStatus + "                        ")
     payloadDict = json.loads(payload)
     # print("state: " + str(payloadDict["state"]))
-    globes.update_accepted = True
+    globals.update_accepted = True
 
