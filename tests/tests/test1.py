@@ -37,17 +37,15 @@ class Test1(Test):
         super().verify_initial_get()
 
     # step 5
-    def prepare_for_iteration(self):
-        super().prepare_for_iteration()
-        print("\rWaiting for device to update the shadow, iteration " + str(self.iteration + 1))
-        # register to receive all update messages
-        self.shadow_handler.shadowRegisterUpdateCallback(callback_shadow_update)
-        self.advance()
+    def delay_before_iteration(self):
+        super().delay_before_iteration()
 
     # step 6
     def run_one_iteration(self):
-        # nothing extra to do for this test
         super().run_one_iteration()
+        # register to receive all update messages
+        self.shadow_handler.shadowRegisterUpdateCallback(callback_shadow_update)
+        print("\rWaiting for device to update the shadow, iteration " + str(self.iteration + 1))
         self.advance()
 
     # step 7

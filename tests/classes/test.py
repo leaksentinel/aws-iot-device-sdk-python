@@ -7,6 +7,7 @@ from time import sleep
 from enum import Enum
 import datetime
 import json
+import random
 from classes.globals import globals
 from classes.shadow import shadow_items
 from termcolor import colored
@@ -59,17 +60,18 @@ class Test:
         self.cycle_timed_out = False            # true if we ran out of time
 
         self.current_delay = 0.0                # seconds to wait before starting the next iteration
+        self.delay_start = None                 # delay start time
+        self.delaying = False                   # true if we are doing the pre-iteration delay
 
     def set_test_characteristics(self):
         # copy values from command line arguments
         self.iterations = self.args.iterations
         self.cycles = self.args.cycles
-        self.delay = self.args.delay
-        self.offset = self.args.offset
         self.connect_not_flowing = self.args.connect_not_flowing
         self.sleep_multiplier = self.args.sleep_multiplier
         self.delay = self.args.delay
         self.offset = self.args.offset
+        self.random = self.args.random
         self.ac_power = self.args.ac_power
 
         # force reasonable defaults
@@ -78,7 +80,7 @@ class Test:
         if self.cycles < 1 or self.cycles > 99:
             self.cycles = 2
         if self.args.ac_power:
-            self.cycle_duration = 11.0
+            self.cycle_duration = 61.0
         else:
             self.cycle_duration = self.cycles * (self.connectNotFlowing * self.sleepMultiplier + 60)
 
@@ -86,7 +88,7 @@ class Test:
         print("AC power connected: " + str(self.args.ac_power) +
               ", connect_not_flowing: " + str(self.connect_not_flowing) +
               ", sleep_multiplier: " + str(self.sleep_multiplier))
-        if self.args.random:
+        if self.random:
             print("iterations: " + str(self.iterations) + ", cycles: " + str(self.cycles) +
                 ", delay: random, offset: n/a")
         else:
@@ -206,18 +208,49 @@ class Test:
                 self.display_cycle_timer()
 
     # step 5
-    def prepare_for_iteration(self):
-        self.iteration_start = datetime.datetime.now()
-        self.iteration_end = None
+    def delay_before_iteration(self):
+        if self.delaying:
+            elapsed_time = (datetime.datetime.now() - self.delay_start).total_seconds()
+            if elapsed_time > self.current_delay:
+                self.delaying = False
+                self.advance()
+            else:
+                self.displayDelayTimer()
+
+        else:
+            self.delay_start = datetime.datetime.now()
+            self.iteration_start = datetime.datetime.now()
+            self.iteration_end = None
+            self.cycle  = 0
+            self.cycle_start = datetime.datetime.now()
+            self.cycle_end = None
+
+            if self.random:
+                self.current_delay = (random.randint(0,1000000) / 1000000.0) * self.cycle_duration
+                print("Waiting for a random delay of " + str(self.current_delay) + " seconds")
+                self.delaying = True
+            elif self.delay > 0.0:
+                self.current_delay = self.delay + (self.iteration * self.offset)
+                print("Waiting for a delay of " + str(self.current_delay) + " seconds")
+                self.delaying = True
+            else:
+                print("No delay time specified, going on to iteration")
+                self.delaying = False
+                self.advance()
 
     # step 6
     def run_one_iteration(self):
-        self.cycle = 0
-        self.cycle_start = datetime.datetime.now()
-        self.cycle_end = None
+        # nothing to do in base class
+        return
 
     # step 7
     def verify_one_iteration(self):
+        # see if wait time has elapsed
+        if self.delaying:
+            wait_time = (datetime.datetime.now() - self.delay_start).total_seconds()
+            if wait_time > self.current_delay:
+                self.delaying = False
+
         # see if we've timed out waiting for one cycle
         self.check_for_timeout()
         if self.cycle_timed_out:
@@ -283,7 +316,7 @@ class Test:
             elif self.step == 4:
                 self.verify_initial_get()
             elif self.step == 5:
-                self.prepare_for_iteration()
+                self.delay_before_iteration()
             elif self.step == 6:
                 self.run_one_iteration()
             elif self.step == 7:
@@ -296,10 +329,15 @@ class Test:
 
             sleep(0.5)
 
+    def displayDelayTimer(self):
+        if self.delay_start != None:
+            duration = datetime.datetime.now() - self.delay_start
+            print("\rWaiting for delay ... (" + self.format_time(duration) + ")", end='')
+
     def displayCycleTimer(self):
         if self.cycle_start != None:
             duration = datetime.datetime.now() - self.cycle_start
-            print("\rWaiting for response (" + self.format_time(duration) + ")", end='')
+            print("\rWaiting for response... (" + self.format_time(duration) + ")", end='')
 
     def check_for_timeout(self):
         if self.cycle_timed_out:

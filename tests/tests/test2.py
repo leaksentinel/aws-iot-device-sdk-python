@@ -65,8 +65,8 @@ class Test2(Test):
 
 
     # step 3
-    def prepare_for_iteration(self):
-        super().prepare_for_iteration()
+    def delay_before_iteration(self):
+        super().delay_before_iteration()
 
         # get current shadow values
         print("\rFetching shadow value, iteration " + str(self.iteration + 1))
@@ -121,9 +121,7 @@ class Test2(Test):
         elif self.step == 5:
             # display timer while we wait
             if self.cycle_start != None:
-                duration = datetime.datetime.now() - self.cycle_start
-                print("\rWaiting for response (" + self.format_time(duration) + ")", end='')
-
+                display_cycle_timer()
     # step 6
     def loop_back(self):
         super().loop_back()

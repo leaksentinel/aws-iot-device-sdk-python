@@ -54,7 +54,7 @@ class Test3(Test):
         self.advance()
 
     # step 5
-    def prepare_for_iteration(self):
+    def delay_before_iteration(self):
         print("Step " + str(self.step + 1))
         wifiButton.press()
         pwrButtonButton.press()
