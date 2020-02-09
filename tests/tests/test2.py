@@ -61,6 +61,9 @@ class Test2(Test):
     def run_one_iteration(self):
         super().run_one_iteration()
 
+        # register to receive all update messages
+        self.shadow_handler.shadowRegisterUpdateCallback(callback_any_shadow_update)
+
         # get current value of param we're interested in
         item: ShadowItem = self.get_current_item()
         if item.get_reported_value_from_json_dict(globals.payload_dict):
@@ -71,12 +74,10 @@ class Test2(Test):
             else:
                 item.desired_value = item.val1
 
-            # annouce which param we are changing
+            # announce which param we are changing
             print("\rChanging " + item.key + " from " + item.reported_value\
-                  + " to " + item.desired_value)
-
-            # register to receive all update messages
-            self.shadow_handler.shadowRegisterUpdateCallback(callback_any_shadow_update)
+                  + " to " + item.desired_value + ", iteration " + str(self.
+                                                                       iteration + 1))
 
             # attempt to update value
             json_str = item.set_desired_value_to_json_str()
@@ -152,7 +153,8 @@ def callback_my_shadow_update(payload, responseStatus, token):
         globals.abort_reason = "Shadow update request timed out"
         return
     if responseStatus == "accepted":
-        globals.update_accepted = True  # this is our own update, need to wait for one from device
+        globals.update_accepted = True  # this is our own update being accepted
+        globals.payload_dict = json.loads(payload)
         # print("Shadow update request was accepted")
         # print(globals.separator)
     if responseStatus == "rejected":

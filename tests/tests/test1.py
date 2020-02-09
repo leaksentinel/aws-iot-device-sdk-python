@@ -72,7 +72,7 @@ class Test1(Test):
 # call us back whenever an updated is accepted, regardless of token
 def callback_shadow_update(payload, responseStatus, token):
     # print("\r" + responseStatus + "                        ")
-     payloadDict = json.loads(payload)
+    payloadDict = json.loads(payload)
     # print("state: " + str(payloadDict["state"]))
     globals.update_accepted = True
 

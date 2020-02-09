@@ -231,7 +231,7 @@ class Test:
 
             if self.random:
                 self.current_delay = (random.randint(0,1000000) / 1000000.0) * self.cycle_duration
-                print("Waiting for a random delay of " + str(self.current_delay) + " seconds")
+                print("Waiting for a random delay of {0:.2f} seconds".format(self.current_delay))
                 self.delaying = True
             elif self.delay > 0.0:
                 self.current_delay = self.delay + (self.iteration * self.offset)
