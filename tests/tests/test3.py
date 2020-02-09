@@ -1,100 +1,173 @@
-# test3.py
-# Created 23 Jan 2020
+# test2.py
+# Created 25 Jan 2020
 # By J K Thomson
 # Copyright (c) 2020 LeakSentinel, Inc.
 
 import json
 import datetime
-from time import sleep
 
-from classes.test import Test
+from classes.shadow import shadow_items
 from classes.globals import globals
-from classes.button import pwrButton, wifiButton
+from classes.test import Test
+
+test_params = [
+    shadow_items.adcAdcNumsamples,
+    shadow_items.motorDelayT,
+
+    # ball valve
+    # shadow_items.valveType,
+    # shadow_items.motorMaxI,
+    # shadow_items.motorMaxT,
+    # shadow_items.motorBackT,
+
+    # gate valve
+    # shadow_items.valveType,
+    shadow_items.motorMaxI,
+    shadow_items.motorMaxT,
+    shadow_items.motorBackT
+
+]
 
 class Test3(Test):
     def __init__(self):
-        super().__init__(3,
-                         "Update Frequency",
-            "Verify that device checks the shadow in the cloud periodically, and that valve state is never unknown")
+        super().__init__(2,
+                         "Change Multiple Parameters",
+                         "Verify that the device responds to requests to change multiple parameters at once")
 
     # step 0
     def prepare_for_test(self):
-        print("Step " + str(self.step + 1))
-        pwrButton.push()
-        wifiButton.push()
-        sleep(1)
-        self.advance()
+        super().prepare_for_test()
 
     # step 1
     def send_initial_update(self):
-        print("Step " + str(self.step + 1))
-        pwrButton.release()
-        sleep(1)
-        self.advance()
+        super(). send_initial_update()
 
     # step 2
     def verify_initial_update(self):
-        print("Step " + str(self.step + 1))
-        wifiButton.release()
-        sleep(1)
-        self.advance()
+        super().verify_initial_update()
 
     # step 3
     def send_initial_get(self):
-        print("Step " + str(self.step + 1))
-        pwrButton.press()
-        sleep(1)
-        self.advance()
+        super().send_initial_get()
 
     # step 4
     def verify_initial_get(self):
-        print("Step " + str(self.step + 1))
-        wifiButton.press()
-        sleep(1)
-        self.advance()
+        super().verify_initial_get()
 
     # step 5
     def delay_before_iteration(self):
-        print("Step " + str(self.step + 1))
-        wifiButton.press()
-        pwrButtonButton.press()
-        sleep(1)
-        self.advance()
+        super().delay_before_iteration()
 
     # step 6
     def run_one_iteration(self):
-        print("Step " + str(self.step + 1))
-        wifiButton.press()
-        pwrButtonButton.press()
-        sleep(1)
+        super().run_one_iteration()
+
+        # register to receive all update messages
+        self.shadow_handler.shadowRegisterUpdateCallback(callback_any_shadow_update)
+
+        # get current value of each param we're interested in
+        for item in test_params:
+            if item.get_reported_value_from_json_dict():
+
+                # get desired val of same param
+                if item.val1 == item.reported_value:
+                    item.desired_value = item.val2
+                else:
+                    item.desired_value = item.val1
+
+                # announce which param we are changing
+                print("\rChanging " + item.key + " from " + item.reported_value\
+                      + " to " + item.desired_value + ", iteration " + str(self.
+                                                                       iteration + 1))
+                # attempt to update value
+                json_str = item.set_desired_values_to_json_str()
+
+        self.shadow_handler.shadowUpdate(json_str, callback_my_shadow_update, 5)
+
+        # wait for reply
         self.advance()
 
     # step 7
     def verify_one_iteration(self):
-        print("Step " + str(self.step + 1))
-        wifiButton.press()
-        sleep(1)
-        self.advance()
+        if globals.update_accepted:
+            globals.update_accepted = False
+            self.check_valve_params()
+            duration = datetime.datetime.now() - self.iteration_start
+            # print("\rUpdate request was accepted by Shadow (" + self.format_time(duration) + ")")
+            item = self.get_current_item()
+            if item.get_reported_value_from_json_dict():
+                if item.desired_value == item.reported_value:
+                    duration = datetime.datetime.now() - self.cycle_start
+                    print("\r" + item.key + " is now reported as " + item.reported_value
+                          + " (" + self.format_time(duration) + ")")
+                    print(globals.separator)
+                    self.advance()
+
+        elif self.step == 7:
+            # display timer while we wait
+            if self.cycle_start != None:
+                self.display_cycle_timer()
 
     # step 8
     def loop_back(self):
-        print("Step " + str(self.step + 1))
-        pwrButtonButton.press()
-        sleep(1)
-        self.advance()
+        super().loop_back()
 
     # step 9
     def finish_test(self):
-        print("Step " + str(self.step + 1))
-        wifiButton.press()
-        pwrButtonButton.press()
-        sleep(1)
+        super().finish_test()
+
+    def get_current_item(self):
+        index = self.iteration % len(test_params)
+        return test_params[index]
 
 # callback functions
-# call us back whenever an updated is accepted, regardless of token
-def callback_shadow_update(payload, responseStatus, token):
-    print("\r" + responseStatus + "                        ")
-    payloadDict = json.loads(payload)
+def callback_set_initial_shadow_values(payload, responseStatus, token):
+    # print("callback_set_initial_shadow_values")
+    if responseStatus == "timeout":
+        print("Update request " + token + " time out!")
+        globals.abort_flag = True
+        globals.abort_reason = "Initial Shadow update request timed out"
+        return
+    if responseStatus == "accepted":
+        globals.update_accepted = True
+        # print("Shadow update request was accepted")
+        # print(globals.separator)
+    if responseStatus == "rejected":
+        print("Update request " + token + " rejected!")
+        globals.abort_flag = True
+        globals.abort_reason = "Error - shadow rejected our initial update request"
+
+# call us back when our get request is handled
+def callback_shadow_get(payload, responseStatus, token):
+    # print("callback_shadow_get")
+    # print("\r" + responseStatus + "                        ")
+    globals.incoming_dict = json.loads(payload)
+    # print("state: " + str(payloadDict["state"]))
+    globals.get_accepted = True
+
+# call us back when our request to update a parameter value is accepted
+def callback_my_shadow_update(payload, responseStatus, token):
+    # print("callback_my_shadow_update")
+    if responseStatus == "timeout":
+        print("Update request " + token + " time out!")
+        globals.abort_flag = True
+        globals.abort_reason = "Shadow update request timed out"
+        return
+    if responseStatus == "accepted":
+        globals.update_accepted = True  # this is our own update being accepted
+        globals.incoming_dict = json.loads(payload)
+        # print("Shadow update request was accepted")
+        # print(globals.separator)
+    if responseStatus == "rejected":
+        print("Update request " + token + " rejected!")
+        globals.abort_flag = True
+        globals.abort_reason = "Error - shadow rejected our initial update request"
+
+# call us back whenever an updated message is generated, regardless of token
+def callback_any_shadow_update(payload, responseStatus, token):
+    # print("callback_any_shadow_update")
+    # print("\r" + responseStatus + "                        ")
+    globals.incoming_dict = json.loads(payload)
     # print("state: " + str(payloadDict["state"]))
     globals.update_accepted = True
 

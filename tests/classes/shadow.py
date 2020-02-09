@@ -4,6 +4,7 @@
 # Copyright (c) 2020 LeakSentinel, Inc.
 
 from enum import Enum
+from classes.globals import globals
 import json
 
 class ShadowCategory(Enum):
@@ -40,7 +41,8 @@ class ShadowItem:
 
     # parse a JSON dictionary, locate our shadow item
     # if found, store its value in self.reported_value as a string
-    def get_reported_value_from_json_dict(self, dict):
+    def get_reported_value_from_json_dict(self):
+        dict = globals.incoming_dict
         category = self.category.value
         key = self.key
         if "state" in dict:
@@ -59,44 +61,57 @@ class ShadowItem:
                             return True
         return False
 
-    # use self.desired_value to create a JSON string
-    def set_desired_value_to_json_str(self):
-        # get desired value from ShadowItem and turn it into JSON
-        category = self.category.value
-        value = self.desired_value
+    # use self.desired_value to add a desired value to a JSON dictionary
+    def set_desired_value_to_json_dict(self):
+        dict = globals.outgoing_dict
         key = self.key
-        item_dict = {key: value}
-        if self.category == ShadowCategory.NONE:
-            desired_dict = {'desired': item_dict}
-            state_dict = {'state': desired_dict}
-            json_str = json.dumps(state_dict)
-            return json_str
-        else:
-            category_dict = {category: item_dict}
-            desired_dict = {'desired': category_dict}
-            state_dict = {'state': desired_dict}
-            json_str = json.dumps(state_dict)
-            return json_str
+        value = self.desired_value
+        stateKey = "state"
+        sectionKey = "desired"
+        categoryKey = self.category.value
 
-    # use self.desired_value to create a JSON string from two shadow items in the same category
-    def set_desired_values_to_json_str(self, item2):
-        category = self.category.value
-        value1 = self.desired_value
-        key1 = self.key
-        value2 = item2.desired_value
-        key2 = item2.key
-        item_dict = {key1: value1, key2: value2}
+        # if no category, put dictionary entry in the root of the section
         if self.category == ShadowCategory.NONE:
-            desired_dict = {'desired': item_dict}
-            state_dict = {'state': desired_dict}
-            json_str = json.dumps(state_dict)
-            return json_str
+            keyDict = {key: value}
+            sectionDict = {sectionKey: keyDict}
+            stateDict = {stateKey: sectionDict}
+            if not stateKey in dict:
+                dict = stateDict
+            else:
+                stateDict = dict[stateKey]
+                if not sectionKey in stateDict:
+                    stateDict[sectionKey] = sectionDict
+                else:
+                    sectionDict = stateDict[sectionKey]
+                    sectionDict[key] = value
+
+        # if there is a category, then dictionary entry goes there
         else:
-            category_dict = {category: item_dict}
-            desired_dict = {'desired': category_dict}
-            state_dict = {'state': desired_dict}
-            json_str = json.dumps(state_dict)
-            return json_str
+            keyDict = {key: value}
+            categoryDict = {categoryKey: keyDict}
+            sectionDict = {sectionKey: categoryDict}
+            stateDict = {stateKey: sectionDict}
+            if not stateKey in dict:
+                dict = stateDict
+            else:
+                stateDict = dict[stateKey]
+                if not sectionKey in stateDict:
+                    stateDict[sectionKey] = sectionDict
+                else:
+                    sectionDict = stateDict[sectionKey]
+                    if not categoryKey in sectionDict:
+                        sectionDict[categoryKey] = categoryDict
+                    else:
+                        categoryDict = sectionDict[categoryKey]
+                        categoryDict[key] = value
+
+        # copy dictionary back to globals
+        globals.outgoing_dict = dict
+
+    # use self.desired_value to create a JSON dictionary from multiple shadow items
+    def set_desired_values_to_json_dict(self, items):
+        for item in items:
+            item.set_desired_value_to_json_dict()
 
 class ShadowItems:
     def __init__(self):

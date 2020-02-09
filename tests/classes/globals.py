@@ -13,10 +13,15 @@ class Globals:
         self.abort_flag = False
         self.abort_reason = ""
 
+        # incoming payload from MQTT message
+        self.incoming_dict = {}
+
+        # outgoing payload from updates
+        self.outgoing_dict = {}
+
         # global strings
         self.separator = "---------------------------------------------------------------------------"
         self.terminator = "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
-        self.payload_dict = None
 
 globals = Globals()

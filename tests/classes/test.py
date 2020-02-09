@@ -32,9 +32,10 @@ class Test:
         self.shadow_handler = None              # aws iot shadow handler object
 
         # these values are set from parsing the command line
+        self.run_all = False                    # run all tests
         self.connect_not_flowing = 30           # shadow value written to shadow at start of first test
         self.sleep_multiplier = 4               # shadow value written to shadow at start of first test
-        self.ac_power = True                    # the device is plugged in, i.e. not running on batteries
+        self.power = True                       # the device is plugged in, i.e. not running on batteries
         self.delay = 0.0                        # how many seconds to wait until start of next iteration
         self.offset = 0.0                       # how many seconds to add to delay for each iteration
         self.iterations = 0                     # total number of iterations in test
@@ -65,6 +66,7 @@ class Test:
 
     def set_test_characteristics(self):
         # copy values from command line arguments
+        self.run_all = self.args
         self.iterations = self.args.iterations
         self.cycles = self.args.cycles
         self.connect_not_flowing = self.args.connect_not_flowing
@@ -72,20 +74,20 @@ class Test:
         self.delay = self.args.delay
         self.offset = self.args.offset
         self.random = self.args.random
-        self.ac_power = self.args.ac_power
+        self.power = self.args.power
 
         # force reasonable defaults
         if self.iterations < 1 or self.iterations > 9999:
             self.iterations = 10
         if self.cycles < 1 or self.cycles > 99:
             self.cycles = 2
-        if self.args.ac_power:
+        if self.args.power:
             self.cycle_duration = 61.0
         else:
             self.cycle_duration = self.cycles * (self.connectNotFlowing * self.sleepMultiplier + 60)
 
     def print_test_characteristics(self):
-        print("AC power connected: " + str(self.args.ac_power) +
+        print("AC power connected: " + str(self.args.power) +
               ", connect_not_flowing: " + str(self.connect_not_flowing) +
               ", sleep_multiplier: " + str(self.sleep_multiplier))
         if self.random:
@@ -132,7 +134,9 @@ class Test:
         item1.desired_value = str(self.connect_not_flowing)
         item2 = shadow_items.wifiConnectSleepMultiplier
         item2.desired_value = str(self.sleep_multiplier)
-        json_str = item1.set_desired_values_to_json_str(item2)
+        globals.outgoing_dict = {}
+        item1.set_desired_values_to_json_dict([item1,item2])
+        json_str = json.dumps(globals.outgoing_dict)
         globals.update_accepted = False
         print("Sending initial 'update' request to Shadow")
         self.shadow_handler.shadowUpdate(json_str, callback_initial_update, 5)
@@ -183,8 +187,8 @@ class Test:
             # now see if values have taken effect
             item1 = shadow_items.wifiConnectNotFlowing
             item2 = shadow_items.wifiConnectSleepMultiplier
-            if item1.get_reported_value_from_json_dict(globals.payload_dict) and\
-            item2.get_reported_value_from_json_dict(globals.payload_dict):
+            if item1.get_reported_value_from_json_dict() and\
+            item2.get_reported_value_from_json_dict():
                 if item1.desired_value == item1.reported_value and item2.desired_value == item2.reported_value:
                     print("connect_not_flowing = " + item1.reported_value\
                           + ", sleep_multiplier = " + item2.reported_value)
@@ -358,8 +362,8 @@ class Test:
         text = ""
         item1 = shadow_items.valveState
         item2 = shadow_items.requestedValveStateReq
-        if item1.get_reported_value_from_json_dict(globals.payload_dict) and \
-                item2.get_reported_value_from_json_dict(globals.payload_dict):
+        if item1.get_reported_value_from_json_dict() and \
+                item2.get_reported_value_from_json_dict():
             if item1.reported_value == "0":
                 if item2.reported_value == "0":
                     text = colored("FAIL - Both valve_state and valve_state req are in an unknown state.\n" + \
@@ -415,7 +419,7 @@ def callback_initial_get(payload, responseStatus, token):
 
     if responseStatus == "accepted":
         globals.get_accepted = True
-        globals.payload_dict = json.loads(payload)
+        globals.incoming_dict = json.loads(payload)
 
     if responseStatus == "rejected":
         print("Get request " + token + " rejected!")

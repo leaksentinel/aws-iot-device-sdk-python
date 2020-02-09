@@ -10,10 +10,11 @@ class Args:
     def __init__(self, parser: argparse.ArgumentParser):
 
         cmd = parser.parse_args()
+        self.run_all = cmd.run_all
         self.numbers = cmd.numbers
         self.connect_not_flowing = cmd.connect_not_flowing
         self.sleep_multiplier = cmd.sleep_multiplier
-        self.ac_power = cmd.ac_power
+        self.power = cmd.power
         self.iterations = cmd.iterations
         self.cycles = cmd.cycles
         self.random = cmd.random

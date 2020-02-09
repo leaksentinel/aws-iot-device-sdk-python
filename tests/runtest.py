@@ -41,12 +41,14 @@ class TestSuite:
 
         # get arguments from command line
         parser = argparse.ArgumentParser()
-        parser.add_argument('numbers', metavar='n', nargs='+', type=int, help='Test numbers (e.g. 1 2 3 4')
+        parser.add_argument('numbers', metavar='n', nargs='*', type=int, help='Test numbers (e.g. 1 2 3 4)')
+        parser.add_argument("-a", "--all", action="store_true", dest="run_all", default=False,
+                            help="Run all tests")
         parser.add_argument("-f", "--connect_not_flowing", action="store", dest="connect_not_flowing", type=int,
                             help="Seconds to wait before connecting", default=30)
         parser.add_argument("-s", "--sleep_multiplier", action="store", dest="sleep_multiplier", type=int,
                             help="Multiply this by connectNotFlowing to get seconds until sleep", default=4)
-        parser.add_argument("-a", "--ac_power", action="store_true", dest="ac_power", default=True,
+        parser.add_argument("-p", "--power", action="store_true", dest="power", default=True,
                             help="AC power is connected")
         parser.add_argument("-i", "--iterations", action="store", dest="iterations", type=int,
                             help="Number of times to iterate test", default=10)
@@ -65,12 +67,23 @@ class TestSuite:
         self.args = Args(parser)
 
         # check test numbers, create array of tests to run
-        for index in self.args.numbers:
-            if index > 0 and index < len(self.tests):
-                self.tests_to_run.append(self.tests[index - 1])
-            else:
-                print("Error - there is no test number " + str(index))
-                exit(2)
+        if self.args.run_all:
+            self.tests_to_run = self.tests
+        else:
+            for index in self.args.numbers:
+                if index > 0 and index < len(self.tests):
+                    self.tests_to_run.append(self.tests[index - 1])
+                else:
+                    print("Error - there is no test number " + str(index))
+                    exit(2)
+        print(globals.terminator)
+
+        test_str = "Running test"
+        if self.tests_to_run.count > 1:
+            test_str += "s"
+        for x in self.tests_to_run:
+            test_str += " " + str(x.number)
+        print(test_str)
 
         # connect to AWS IoT
         connection = Connection()
@@ -118,8 +131,8 @@ class TestSuite:
                         if self.loop >= self.args.loops:
                             print("All tests completed")
                             exit(0)
-                        else:
-                            self.current_status = TestStatus.IDLE
+                    else:
+                        self.current_status = TestStatus.IDLE
 
             sleep(1)
 
