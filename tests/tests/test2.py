@@ -39,78 +39,61 @@ class Test2(Test):
 
     # step 1
     def send_initial_update(self):
-        super().send_initial_update()
-
-        # send "connect_not_flowing" and "sleep_multiplier" values to shadow
-        dict = {'connect_not_flowing': str(self.args.connect_not_flowing),
-                'sleep_multiplier': str(self.args.sleep_multiplier)}
-        wifi_dict = {'wifi': dict}
-        desired_dict = {'desired': wifi_dict}
-        state_dict = {'state': desired_dict}
-        json_str = json.dumps(state_dict)
-        globals.update_accepted = False
-        print("Sending connect_not_flowing and sleep_multiplier to shadow")
-        self.shadow_handler.shadowUpdate(json_str, callback_set_initial_shadow_values, 5)
-        self.advance()
+        super(). send_initial_update()
 
     # step 2
     def verify_initial_update(self):
-        if globals.update_accepted:
-            globals.update_accepted = False
-            self.advance()
-
-        else:
-            # check for time out
-            super().verify_initial_update()
-
+        super().verify_initial_update()
 
     # step 3
+    def send_initial_get(self):
+        super().send_initial_get()
+
+    # step 4
+    def verify_initial_get(self):
+        super().verify_initial_get()
+
+    # step 5
     def delay_before_iteration(self):
         super().delay_before_iteration()
 
-        # get current shadow values
-        print("\rFetching shadow value, iteration " + str(self.iteration + 1))
-        self.shadow_handler.shadowGet(callback_shadow_get, 5)
-        self.advance()
-
-    # step 4
+    # step 6
     def run_one_iteration(self):
         super().run_one_iteration()
 
-        if globals.get_accepted:
-            globals.get_accepted = False
+        # get current value of param we're interested in
+        item: ShadowItem = self.get_current_item()
+        if item.get_reported_value_from_json_dict(globals.payload_dict):
 
-            # get current value of param we're interested in
-            item: ShadowItem = self.get_current_item()
-            if item.set_reported_value_from_json(globals.payload_dict):
+            # get desired val of same param
+            if item.val1 == item.reported_value:
+                item.desired_value = item.val2
+            else:
+                item.desired_value = item.val1
 
-                # get desired val of same param
-                if item.val1 == item.reported_value:
-                    item.desired_value = item.val2
-                else:
-                    item.desired_value = item.val1
+            # annouce which param we are changing
+            print("\rChanging " + item.key + " from " + item.reported_value\
+                  + " to " + item.desired_value)
 
-                # attempt to update value
-                print("Changing " + item.key + " from " + item.reported_value + " to " + item.desired_value)
-                json_str = item.set_desired_value_to_json()
-                self.shadow_handler.shadowUpdate(json_str, callback_my_shadow_update, 5)
+            # register to receive all update messages
+            self.shadow_handler.shadowRegisterUpdateCallback(callback_any_shadow_update)
 
-                # register to receive all update messages
-                self.shadow_handler.shadowRegisterUpdateCallback(callback_any_shadow_update)
+            # attempt to update value
+            json_str = item.set_desired_value_to_json_str()
+            self.shadow_handler.shadowUpdate(json_str, callback_my_shadow_update, 5)
 
-                # wait for reply
-                self.advance()
+            # wait for reply
+            self.advance()
 
-    # step 5
+    # step 7
     def verify_one_iteration(self):
-        super().verify_one_iteration()
-
         if globals.update_accepted:
             globals.update_accepted = False
+            self.check_valve_params()
             duration = datetime.datetime.now() - self.iteration_start
             # print("\rUpdate request was accepted by Shadow (" + self.format_time(duration) + ")")
             item = self.get_current_item()
-            if item.set_reported_value_from_json(globals.payload_dict):
+            if item.get_reported_value_from_json_dict(globals.payload_dict):
                 if item.desired_value == item.reported_value:
                     duration = datetime.datetime.now() - self.cycle_start
                     print("\r" + item.key + " is now reported as " + item.reported_value
@@ -118,15 +101,16 @@ class Test2(Test):
                     print(globals.separator)
                     self.advance()
 
-        elif self.step == 5:
+        elif self.step == 7:
             # display timer while we wait
             if self.cycle_start != None:
-                display_cycle_timer()
-    # step 6
+                self.display_cycle_timer()
+
+    # step 8
     def loop_back(self):
         super().loop_back()
 
-    # step 7
+    # step 9
     def finish_test(self):
         super().finish_test()
 
@@ -144,8 +128,8 @@ def callback_set_initial_shadow_values(payload, responseStatus, token):
         return
     if responseStatus == "accepted":
         globals.update_accepted = True
-        print("Shadow update request was accepted")
-        print(globals.separator)
+        # print("Shadow update request was accepted")
+        # print(globals.separator)
     if responseStatus == "rejected":
         print("Update request " + token + " rejected!")
         globals.abort_flag = True
@@ -168,9 +152,9 @@ def callback_my_shadow_update(payload, responseStatus, token):
         globals.abort_reason = "Shadow update request timed out"
         return
     if responseStatus == "accepted":
-        globals.update_accepted = False  # this is our own update, need to wait for one from device
-        print("Shadow update request was accepted")
-        print(globals.separator)
+        globals.update_accepted = True  # this is our own update, need to wait for one from device
+        # print("Shadow update request was accepted")
+        # print(globals.separator)
     if responseStatus == "rejected":
         print("Update request " + token + " rejected!")
         globals.abort_flag = True

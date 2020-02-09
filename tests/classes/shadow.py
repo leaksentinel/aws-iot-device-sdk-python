@@ -39,7 +39,7 @@ class ShadowItem:
         self.reported_value = None
 
     # parse a JSON dictionary, locate our shadow item
-    # if found, store its value in self.reported_value
+    # if found, store its value in self.reported_value as a string
     def get_reported_value_from_json_dict(self, dict):
         category = self.category.value
         key = self.key
@@ -49,44 +49,23 @@ class ShadowItem:
                 reported_dict = state_dict["reported"]
                 if self.category == ShadowCategory.NONE:
                     if key in reported_dict:
-                        self.reported_value = self.string_to_value(reported_dict[key])
+                        self.reported_value = reported_dict[key]
                         return True
                 else:
                     if category in reported_dict:
                         category_dict = reported_dict[category]
                         if key in category_dict:
-                            self.reported_value = self.string_to_value(category_dict[key])
+                            self.reported_value = category_dict[key]
                             return True
         return False
 
     # use self.desired_value to create a JSON string
     def set_desired_value_to_json_str(self):
-
-        # need to turn value into a string for JSON purposes
+        # get desired value from ShadowItem and turn it into JSON
         category = self.category.value
-        value_str = value_to_string(self.desired_value)
+        value = self.desired_value
         key = self.key
-        item_dict = {key: value_str}
-        if self.category == ShadowCategory.NONE:
-            desired_dict = {'desired': item_dict}
-            state_dict = {'state': desired_dict}
-            json_str = json.dumps(state_dict)
-            return json_str
-        else:
-            category_dict = {'wifi': item_dict}
-            desired_dict = {'desired': category_dict}
-            state_dict = {'state': desired_dict}
-            json_str = json.dumps(state_dict)
-            return json_str
-
-    # use self.desired_value to create a JSON string from two shadow items in the same category
-    def set_desired_values_to_json_str(self, item2):
-        category = self.category.value
-        value_str1 = self.value_to_string(self.desired_value)
-        key1 = self.key
-        value_str2 = self.value_to_string(item2.desired_value)
-        key2 = item2.key
-        item_dict = {key1: value_str1, key2: value_str2}
+        item_dict = {key: value}
         if self.category == ShadowCategory.NONE:
             desired_dict = {'desired': item_dict}
             state_dict = {'state': desired_dict}
@@ -99,29 +78,25 @@ class ShadowItem:
             json_str = json.dumps(state_dict)
             return json_str
 
-
-    def value_to_string(self, value):
-        if self.type == ShadowItemType.STRING:
-            return value
-        elif self.type == ShadowItemType.DOUBLE:
-            strfmt = "{0:.2f}"
-            return strfmt.format(value)
-        elif self.type == ShadowItemType.INT:
-            strfmt = "{0}"
-            return strfmt.format(value)
+    # use self.desired_value to create a JSON string from two shadow items in the same category
+    def set_desired_values_to_json_str(self, item2):
+        category = self.category.value
+        value1 = self.desired_value
+        key1 = self.key
+        value2 = item2.desired_value
+        key2 = item2.key
+        item_dict = {key1: value1, key2: value2}
+        if self.category == ShadowCategory.NONE:
+            desired_dict = {'desired': item_dict}
+            state_dict = {'state': desired_dict}
+            json_str = json.dumps(state_dict)
+            return json_str
         else:
-            return string
-
-    def string_to_value(self, string):
-        if self.type == ShadowItemType.STRING:
-            return string
-        elif self.type == ShadowItemType.DOUBLE:
-            return float(string)
-        elif self.type == ShadowItemType.INT:
-            return int(string)
-        else:
-            return string
-
+            category_dict = {category: item_dict}
+            desired_dict = {'desired': category_dict}
+            state_dict = {'state': desired_dict}
+            json_str = json.dumps(state_dict)
+            return json_str
 
 class ShadowItems:
     def __init__(self):

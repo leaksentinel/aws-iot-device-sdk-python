@@ -129,9 +129,9 @@ class Test:
 
         # send request to update "connect_not_flowing" and "sleep_multiplier" values to shadow
         item1 = shadow_items.wifiConnectNotFlowing
-        item1.desired_value = self.connect_not_flowing
+        item1.desired_value = str(self.connect_not_flowing)
         item2 = shadow_items.wifiConnectSleepMultiplier
-        item2.desired_value = self.sleep_multiplier
+        item2.desired_value = str(self.sleep_multiplier)
         json_str = item1.set_desired_values_to_json_str(item2)
         globals.update_accepted = False
         print("Sending initial 'update' request to Shadow")
@@ -166,7 +166,7 @@ class Test:
         self.cycle = 0
         self.cycle_start = datetime.datetime.now()
         self.cycle_end = None
-        print("Sending 'get' request to the Shadow")
+        print("Sending initial 'get' request to Shadow")
         globals.get_accepted = False
         self.shadow_handler.shadowGet(callback_initial_get, 5)
         sleep(2)
@@ -186,8 +186,8 @@ class Test:
             if item1.get_reported_value_from_json_dict(globals.payload_dict) and\
             item2.get_reported_value_from_json_dict(globals.payload_dict):
                 if item1.desired_value == item1.reported_value and item2.desired_value == item2.reported_value:
-                    print("connect_not_flowing = " + str(item1.reported_value)\
-                          + ", sleep_multiplier = " + str(item2.reported_value))
+                    print("connect_not_flowing = " + item1.reported_value\
+                          + ", sleep_multiplier = " + item2.reported_value)
                     print(globals.separator)
                     self.advance()
                     return
@@ -203,7 +203,8 @@ class Test:
                 globals.abort_reason = "initial get was never accepted"
             else:
                 # start another cycle
-                print("Starting cycle " + str(self.cycle + 1))
+                msg = colored("Starting cycle " + str(self.cycle + 1), "red")
+                print(msg)
                 self.cycle_start = datetime.datetime.now()
 
         else:
@@ -218,7 +219,7 @@ class Test:
                 self.delaying = False
                 self.advance()
             else:
-                self.displayDelayTimer()
+                self.display_delay_timer()
 
         else:
             self.delay_start = datetime.datetime.now()
@@ -237,7 +238,7 @@ class Test:
                 print("Waiting for a delay of " + str(self.current_delay) + " seconds")
                 self.delaying = True
             else:
-                print("No delay time specified, going on to iteration")
+                print("No delay time specified")
                 self.delaying = False
                 self.advance()
 
@@ -276,7 +277,7 @@ class Test:
                 print(text)
 
         else:
-            self.displayCycleTimer()
+            self.display_cycle_timer()
 
 
     # step 8
@@ -295,7 +296,7 @@ class Test:
 
     # abnormal termination
     def abort_test(self):
-        text = colored("Test aborted: " + globals.abort_reason)
+        text = colored("Test aborted: " + globals.abort_reason, "red")
         print(text)
         exit(2)
 
@@ -332,12 +333,12 @@ class Test:
 
             sleep(0.5)
 
-    def displayDelayTimer(self):
+    def display_delay_timer(self):
         if self.delay_start != None:
             duration = datetime.datetime.now() - self.delay_start
             print("\rWaiting for delay ... (" + self.format_time(duration) + ")", end='')
 
-    def displayCycleTimer(self):
+    def display_cycle_timer(self):
         if self.cycle_start != None:
             duration = datetime.datetime.now() - self.cycle_start
             print("\rWaiting for response... (" + self.format_time(duration) + ")", end='')
@@ -389,20 +390,6 @@ class Test:
             str = f'{h:d}:{m:02d}:{s:02d}'
         return str
 
-    def check_for_valve_state_unknown(self):
-        item = shadow_items.valveState
-        if item.set_reported_value_from_json(globals.payload_dict):
-            if item.reported_value == 0:
-                self.status = TestStatus.ABORTED
-                self.abort_reason = "valve_state is set to 0 (unknown) -- please fix before running tests"
-                return
-
-        item = shadow_items.requestedValveStateReq
-        if item.set_reported_value_from_json(globals.payload_dict):
-            if item.reported_value == 0:
-                self.status = TestStatus.ABORTED
-                self.abort_reason = "valve_state_req is set to 0 (unknown) -- please fix before running tests"
-                return
 
 def callback_initial_update(payload, responseStatus, token):
     if responseStatus == "timeout":
