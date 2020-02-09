@@ -71,7 +71,7 @@ class TestSuite:
             self.tests_to_run = self.tests
         else:
             for index in self.args.numbers:
-                if index > 0 and index < len(self.tests):
+                if index > 0 and index <= len(self.tests):
                     self.tests_to_run.append(self.tests[index - 1])
                 else:
                     print("Error - there is no test number " + str(index))
