@@ -5,9 +5,8 @@
 
 import json
 import datetime
-import termcolor
-from classes.test import Test
-from classes.globals import globals
+from tests.classes.test import Test
+from tests.classes.globals import globals
 
 
 class Test1(Test):

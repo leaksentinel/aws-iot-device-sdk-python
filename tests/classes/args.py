@@ -14,7 +14,7 @@ class Args:
         self.numbers = cmd.numbers
         self.connect_not_flowing = cmd.connect_not_flowing
         self.sleep_multiplier = cmd.sleep_multiplier
-        self.power = cmd.power
+        self.battery = cmd.battery
         self.iterations = cmd.iterations
         self.cycles = cmd.cycles
         self.random = cmd.random

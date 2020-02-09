@@ -8,8 +8,8 @@ from enum import Enum
 import datetime
 import json
 import random
-from classes.globals import globals
-from classes.shadow import shadow_items
+from tests.classes.globals import globals
+from tests.classes.shadow import shadow_items
 from termcolor import colored
 
 class TestStatus(Enum):
@@ -35,7 +35,7 @@ class Test:
         self.run_all = False                    # run all tests
         self.connect_not_flowing = 30           # shadow value written to shadow at start of first test
         self.sleep_multiplier = 4               # shadow value written to shadow at start of first test
-        self.power = True                       # the device is plugged in, i.e. not running on batteries
+        self.battery = False                    # the device is not plugged in, i.e. running on batteries
         self.delay = 0.0                        # how many seconds to wait until start of next iteration
         self.offset = 0.0                       # how many seconds to add to delay for each iteration
         self.iterations = 0                     # total number of iterations in test
@@ -74,20 +74,20 @@ class Test:
         self.delay = self.args.delay
         self.offset = self.args.offset
         self.random = self.args.random
-        self.power = self.args.power
+        self.battery = self.args.battery
 
         # force reasonable defaults
         if self.iterations < 1 or self.iterations > 9999:
             self.iterations = 10
         if self.cycles < 1 or self.cycles > 99:
             self.cycles = 2
-        if self.args.power:
+        if not self.args.battery:
             self.cycle_duration = 61.0
         else:
             self.cycle_duration = self.cycles * (self.connectNotFlowing * self.sleepMultiplier + 60)
 
     def print_test_characteristics(self):
-        print("AC power connected: " + str(self.args.power) +
+        print("Battery powered: " + str(self.args.battery) +
               ", connect_not_flowing: " + str(self.connect_not_flowing) +
               ", sleep_multiplier: " + str(self.sleep_multiplier))
         if self.random:
@@ -190,7 +190,7 @@ class Test:
             if item1.get_reported_value_from_json_dict() and\
             item2.get_reported_value_from_json_dict():
                 if item1.desired_value == item1.reported_value and item2.desired_value == item2.reported_value:
-                    print("connect_not_flowing = " + item1.reported_value\
+                    print("'get' succeeded, connect_not_flowing = " + item1.reported_value\
                           + ", sleep_multiplier = " + item2.reported_value)
                     print(globals.separator)
                     self.advance()

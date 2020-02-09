@@ -6,9 +6,10 @@
 import json
 import datetime
 
-from classes.shadow import shadow_items
-from classes.globals import globals
-from classes.test import Test
+from tests.classes.shadow import shadow_items
+from tests.classes.shadow import ShadowItem
+from tests.classes.globals import globals
+from tests. classes.test import Test
 
 test_params = [
     shadow_items.adcAdcNumsamples,
@@ -32,7 +33,6 @@ class Test2(Test):
         super().__init__(2,
                          "Change Single Parameter",
                          "Verify that the device responds to requests to change a single parameter")
-
     # step 0
     def prepare_for_test(self):
         super().prepare_for_test()

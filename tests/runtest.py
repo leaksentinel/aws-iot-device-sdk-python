@@ -12,10 +12,10 @@ from tests.test1 import Test1
 from tests.test2 import Test2
 from tests.test3 import Test3
 from tests.test4 import Test4
-from classes.test import TestStatus
-from classes.args import Args
-from classes.connection import Connection
-from classes.globals import globals
+from tests.classes.test import TestStatus
+from tests.classes.args import Args
+from tests.classes.connection import Connection
+from tests.classes.globals import globals
 
 # configure logging
 logger = logging.getLogger("AWSIoTPythonSDK.core")
@@ -48,8 +48,8 @@ class TestSuite:
                             help="Seconds to wait before connecting", default=30)
         parser.add_argument("-s", "--sleep_multiplier", action="store", dest="sleep_multiplier", type=int,
                             help="Multiply this by connectNotFlowing to get seconds until sleep", default=4)
-        parser.add_argument("-p", "--power", action="store_true", dest="power", default=True,
-                            help="AC power is connected")
+        parser.add_argument("-b", "--battery", action="store_true", dest="battery", default=False,
+                            help="True if running on battery power -- AC power is not connected")
         parser.add_argument("-i", "--iterations", action="store", dest="iterations", type=int,
                             help="Number of times to iterate test", default=10)
         parser.add_argument("-c", "--cycles", action="store", dest="cycles", type=int,
@@ -79,7 +79,7 @@ class TestSuite:
         print(globals.terminator)
 
         test_str = "Running test"
-        if self.tests_to_run.count > 1:
+        if len(self.tests_to_run) > 1:
             test_str += "s"
         for x in self.tests_to_run:
             test_str += " " + str(x.number)

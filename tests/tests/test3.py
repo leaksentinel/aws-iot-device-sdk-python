@@ -6,9 +6,9 @@
 import json
 import datetime
 
-from classes.shadow import shadow_items
-from classes.globals import globals
-from classes.test import Test
+from tests.classes.shadow import shadow_items
+from tests.classes.globals import globals
+from tests.classes.test import Test
 
 test_params = [
     shadow_items.adcAdcNumsamples,
@@ -30,10 +30,9 @@ test_params = [
 
 class Test3(Test):
     def __init__(self):
-        super().__init__(2,
+        super().__init__(3,
                          "Change Multiple Parameters",
                          "Verify that the device responds to requests to change multiple parameters at once")
-
     # step 0
     def prepare_for_test(self):
         super().prepare_for_test()
@@ -65,7 +64,8 @@ class Test3(Test):
         # register to receive all update messages
         self.shadow_handler.shadowRegisterUpdateCallback(callback_any_shadow_update)
 
-        # get current value of each param we're interested in
+        # get current value of params we're interested in
+        globals.outgoing_dict = {}
         for item in test_params:
             if item.get_reported_value_from_json_dict():
 
@@ -76,12 +76,15 @@ class Test3(Test):
                     item.desired_value = item.val1
 
                 # announce which param we are changing
-                print("\rChanging " + item.key + " from " + item.reported_value\
-                      + " to " + item.desired_value + ", iteration " + str(self.
-                                                                       iteration + 1))
-                # attempt to update value
-                json_str = item.set_desired_values_to_json_str()
+                # print("\rChanging " + item.key + " from " + item.reported_value\
+                #       + " to " + item.desired_value + ", iteration " + str(self.iteration + 1))
 
+                # attempt to update value
+                item.set_desired_value_to_json_dict()
+
+        print("\rChanging " + str(len(test_params))\
+              + " parameters at one fell swoop, iteration " + str(self.iteration + 1))
+        json_str = json.dumps(globals.outgoing_dict)
         self.shadow_handler.shadowUpdate(json_str, callback_my_shadow_update, 5)
 
         # wait for reply
@@ -94,14 +97,19 @@ class Test3(Test):
             self.check_valve_params()
             duration = datetime.datetime.now() - self.iteration_start
             # print("\rUpdate request was accepted by Shadow (" + self.format_time(duration) + ")")
-            item = self.get_current_item()
-            if item.get_reported_value_from_json_dict():
-                if item.desired_value == item.reported_value:
-                    duration = datetime.datetime.now() - self.cycle_start
-                    print("\r" + item.key + " is now reported as " + item.reported_value
-                          + " (" + self.format_time(duration) + ")")
-                    print(globals.separator)
-                    self.advance()
+            matches = 0
+            for item in test_params:
+                if item.get_reported_value_from_json_dict():
+                    if item.desired_value == item.reported_value:
+                        matches += 1
+                        duration = datetime.datetime.now() - self.cycle_start
+                        # print("\r" + item.key + " is now reported as " + item.reported_value
+                        #       + " (" + self.format_time(duration) + ")")
+            if matches == len(test_params):
+                print("\rAll " + str(matches) + " parameters have resolved " \
+                      + " (" + self.format_time(duration) + ")")
+                print(globals.separator)
+                self.advance()
 
         elif self.step == 7:
             # display timer while we wait
@@ -170,4 +178,6 @@ def callback_any_shadow_update(payload, responseStatus, token):
     globals.incoming_dict = json.loads(payload)
     # print("state: " + str(payloadDict["state"]))
     globals.update_accepted = True
+
+
 

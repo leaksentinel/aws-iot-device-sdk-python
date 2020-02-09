@@ -4,8 +4,7 @@
 # Copyright (c) 2020 LeakSentinel, Inc.
 
 from enum import Enum
-from classes.globals import globals
-import json
+from tests.classes.globals import globals
 
 class ShadowCategory(Enum):
     DEVICE = "device"
