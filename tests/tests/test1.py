@@ -5,6 +5,7 @@
 
 import json
 import datetime
+from tests.classes.test import callback_any_shadow_update
 from tests.classes.test import Test
 from tests.classes.globals import globals
 
@@ -43,7 +44,7 @@ class Test1(Test):
     def run_one_iteration(self):
         super().run_one_iteration()
         # register to receive all update messages
-        self.shadow_handler.shadowRegisterUpdateCallback(callback_shadow_update)
+        self.shadow_handler.shadowRegisterUpdateCallback(callback_any_shadow_update)
         print("\rWaiting for device to update the shadow, iteration " + str(self.iteration + 1))
         self.advance()
 
@@ -66,12 +67,4 @@ class Test1(Test):
     # step 9
     def finish_test(self):
         super().finish_test()
-
-# callback functions
-# call us back whenever an updated is accepted, regardless of token
-def callback_shadow_update(payload, responseStatus, token):
-    # print("\r" + responseStatus + "                        ")
-    payloadDict = json.loads(payload)
-    # print("state: " + str(payloadDict["state"]))
-    globals.update_accepted = True
 

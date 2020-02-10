@@ -139,7 +139,7 @@ class Test:
         json_str = json.dumps(globals.outgoing_dict)
         globals.update_accepted = False
         print("Sending initial 'update' request to Shadow")
-        self.shadow_handler.shadowUpdate(json_str, callback_initial_update, 5)
+        self.shadow_handler.shadowUpdate(json_str, callback_my_shadow_update, 5)
         self.advance()
 
     # step 2
@@ -172,7 +172,7 @@ class Test:
         self.cycle_end = None
         print("Sending initial 'get' request to Shadow")
         globals.get_accepted = False
-        self.shadow_handler.shadowGet(callback_initial_get, 5)
+        self.shadow_handler.shadowGet(callback_my_shadow_get, 5)
         sleep(2)
         self.advance()
 
@@ -395,7 +395,7 @@ class Test:
         return str
 
 
-def callback_initial_update(payload, responseStatus, token):
+def callback_my_shadow_update(payload, responseStatus, token):
     if responseStatus == "timeout":
         print("Update request " + token + " time out!")
         globals.abort_flag = True
@@ -403,6 +403,7 @@ def callback_initial_update(payload, responseStatus, token):
         return
 
     if responseStatus == "accepted":
+        globals.incoming_dict = json.loads(payload)
         globals.update_accepted = True
 
     if responseStatus == "rejected":
@@ -410,7 +411,8 @@ def callback_initial_update(payload, responseStatus, token):
         globals.abort_flag = True
         globals.abort_reason = "Error - shadow rejected our initial update request"
 
-def callback_initial_get(payload, responseStatus, token):
+
+def callback_my_shadow_get(payload, responseStatus, token):
     if responseStatus == "timeout":
         print("Get request " + token + " time out!")
         globals.abort_flag = True
@@ -425,3 +427,13 @@ def callback_initial_get(payload, responseStatus, token):
         print("Get request " + token + " rejected!")
         globals.abort_flag = True
         globals.abort_reason = "Error - shadow rejected our initial get request"
+
+
+# call us back whenever an updated message is generated, regardless of token
+def callback_any_shadow_update(payload, responseStatus, token):
+    # print("callback_any_shadow_update")
+    # print("\r" + responseStatus + "                        ")
+    globals.incoming_dict = json.loads(payload)
+    # print("state: " + str(payloadDict["state"]))
+    globals.update_accepted = True
+

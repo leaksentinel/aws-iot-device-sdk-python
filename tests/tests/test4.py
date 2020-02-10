@@ -7,9 +7,10 @@ import json
 import datetime
 
 from tests.classes.shadow import shadow_items
-from tests.classes.shadow import ShadowItem
 from tests.classes.globals import globals
 from tests. classes.test import Test
+from tests.classes.test import callback_my_shadow_update
+from tests.classes.test import callback_any_shadow_update
 
 test_params = [
     shadow_items.requestedValveStateCounter,
@@ -61,6 +62,9 @@ class Test4(Test):
                 if item == shadow_items.requestedValveStateCounter:
                     icount = int(item.reported_value)
                     item.desired_value = str(icount + 1)
+                    print("\rChanging " + item.key + " from " + item.reported_value\
+                          + " to " + item.desired_value + ", iteration " + str(self.iteration + 1))
+
 
                 # if this is valve state, get opposite state
                 if item == shadow_items.requestedValveStateReq:
@@ -68,10 +72,10 @@ class Test4(Test):
                         item.desired_value = item.val2
                     else:
                         item.desired_value = item.val1
-
-                # announce which param we are changing
-                print("\rChanging " + item.key + " from " + item.reported_value\
-                      + " to " + item.desired_value + ", iteration " + str(self.iteration + 1))
+                    if item.desired_value == "1":
+                        print("\rAttempting to open the valve")
+                    else:
+                        print("\rAttempting to close the valve")
 
                 # attempt to update values
                 item.set_desired_value_to_json_dict()
@@ -115,61 +119,4 @@ class Test4(Test):
     # step 9
     def finish_test(self):
         super().finish_test()
-
-    def get_current_item(self):
-        index = self.iteration % len(test_params)
-        return test_params[index]
-
-# callback functions
-def callback_set_initial_shadow_values(payload, responseStatus, token):
-    # print("callback_set_initial_shadow_values")
-    if responseStatus == "timeout":
-        print("Update request " + token + " time out!")
-        globals.abort_flag = True
-        globals.abort_reason = "Initial Shadow update request timed out"
-        return
-    if responseStatus == "accepted":
-        globals.update_accepted = True
-        # print("Shadow update request was accepted")
-        # print(globals.separator)
-    if responseStatus == "rejected":
-        print("Update request " + token + " rejected!")
-        globals.abort_flag = True
-        globals.abort_reason = "Error - shadow rejected our initial update request"
-
-# call us back when our get request is handled
-def callback_shadow_get(payload, responseStatus, token):
-    # print("callback_shadow_get")
-    # print("\r" + responseStatus + "                        ")
-    globals.incoming_dict = json.loads(payload)
-    # print("state: " + str(payloadDict["state"]))
-    globals.get_accepted = True
-
-# call us back when our request to update a parameter value is accepted
-def callback_my_shadow_update(payload, responseStatus, token):
-    # print("callback_my_shadow_update")
-    if responseStatus == "timeout":
-        print("Update request " + token + " time out!")
-        globals.abort_flag = True
-        globals.abort_reason = "Shadow update request timed out"
-        return
-    if responseStatus == "accepted":
-        globals.update_accepted = True  # this is our own update being accepted
-        globals.incoming_dict = json.loads(payload)
-        # print("Shadow update request was accepted")
-        # print(globals.separator)
-    if responseStatus == "rejected":
-        print("Update request " + token + " rejected!")
-        globals.abort_flag = True
-        globals.abort_reason = "Error - shadow rejected our initial update request"
-
-# call us back whenever an updated message is generated, regardless of token
-def callback_any_shadow_update(payload, responseStatus, token):
-    # print("callback_any_shadow_update")
-    # print("\r" + responseStatus + "                        ")
-    globals.incoming_dict = json.loads(payload)
-    # print("state: " + str(payloadDict["state"]))
-    globals.update_accepted = True
-
-
 
