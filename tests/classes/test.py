@@ -82,7 +82,7 @@ class Test:
         if self.cycles < 1 or self.cycles > 99:
             self.cycles = 2
         if not self.args.battery:
-            self.cycle_duration = 61.0
+            self.cycle_duration = 16.0
         else:
             self.cycle_duration = self.cycles * (self.connectNotFlowing * self.sleepMultiplier + 60)
 
@@ -368,13 +368,13 @@ class Test:
                 item2.get_reported_value_from_json_dict():
             if item1.reported_value == "0":
                 if item2.reported_value == "0":
-                    text = colored("FAIL - Both valve_state and valve_state req are in an unknown state.\n" + \
+                    text = colored("\nFAIL - Both valve_state and valve_state req are in an unknown state.\n" + \
                                    "Please reset both to a known state before you run this app.", 'red')
                 else:
-                    text = colored("FAIL - valve_state is in an unknown state.\n" + \
+                    text = colored("\nFAIL - valve_state is in an unknown state.\n" + \
                                    "Please reset valve_state to a known state before you run this app.", 'red')
             elif item2.reported_value == "0":
-                    text = colored("FAIL - valve_state_req is in an unknown state.\n" + \
+                    text = colored("\nFAIL - valve_state_req is in an unknown state.\n" + \
                                    "Please reset valve_state_req to a known state before you run this app.", 'red')
             if not text == "":
                 print(text)

@@ -96,7 +96,10 @@ class TestSuite:
     # run one test in the suite
     def run_test(self, skip_initial_update):
        curtest = self.tests_to_run[self.current_index]
-       print("Start Test " + str(curtest.number) + " - " + curtest.name)
+       if self.args.loops > 1:
+           print("Start Loop " + str(self.loop + 1) + ", Test " + str(curtest.number) + " - " + curtest.name)
+       else:
+           print("Start Test " + str(curtest.number) + " - " + curtest.name)
        print(globals.terminator)
        self.current_status = TestStatus.RUNNING
        curtest.run(self.args, self.shadow_handler, skip_initial_update)
