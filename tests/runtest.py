@@ -8,10 +8,10 @@ import argparse
 from time import sleep
 from termcolor import colored
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTShadowClient
-from tests.test1 import Test1
-from tests.test2 import Test2
-from tests.test3 import Test3
-from tests.test4 import Test4
+from tests.tests.test1 import Test1
+from tests.tests.test2 import Test2
+from tests.tests.test3 import Test3
+from tests.tests.test4 import Test4
 from tests.classes.test import TestStatus
 from tests.classes.args import Args
 from tests.classes.connection import Connection
@@ -96,7 +96,7 @@ class TestSuite:
     # run one test in the suite
     def run_test(self, skip_initial_update):
        curtest = self.tests_to_run[self.current_index]
-       print("Start test " + str(curtest.number) + " - " + curtest.name)
+       print("Start Test " + str(curtest.number) + " - " + curtest.name)
        print(globals.terminator)
        self.current_status = TestStatus.RUNNING
        curtest.run(self.args, self.shadow_handler, skip_initial_update)
@@ -115,10 +115,12 @@ class TestSuite:
             if self.current_status == TestStatus.RUNNING:
 
                 # ... has it completed yet?
-                if self.tests_to_run[self.current_index].status == TestStatus.COMPLETE:
+                test = self.tests_to_run[self.current_index]
+                if test.status == TestStatus.COMPLETE:
 
                     # yes, print test results
-                    self.print_test_results()
+                    self.print_one_test_result(test)
+                    print(globals.terminator)
 
                     # set flag so we don't have to send connect_not_flowing and sleep_multiplier again
                     self.initial_update_was_done = True
@@ -128,26 +130,36 @@ class TestSuite:
                     if self.current_index >= len(self.tests_to_run):
 
                         # no more tests to run in the suite, should we loop back and start over?
-                        print("Finished one loop through the suite")
+                        print("Finished loop " + str(self.loop + 1) + " through the suite")
+                        self.print_all_test_results()
                         self.loop += 1
                         if self.loop >= self.args.loops:
                             print("All tests completed")
                             exit(0)
+                        else:
+                            self.current_index = 0
+                            self.current_status = TestStatus.IDLE
                     else:
                         self.current_status = TestStatus.IDLE
 
             sleep(1)
 
-    def print_test_results(self):
-        # print("\r" + globals.separator)
-        test = self.tests[self.current_index]
+    def print_one_test_result(self, test):
         if test.failures > 0:
-            text = colored("FAIL - " + test.name + " reported " + str(test.failures) + " failures", 'red')
+            text = colored("FAIL - Test " + str(test.number) + " (" + test.name + ") reported "\
+                           + str(test.failures) + " failures", "red")
             print(text)
         else:
-            text = colored("PASS - " + test.name + " passed all tests", 'green')
+            text = colored("PASS - Test " + str(test.number) + " (" + test.name\
+                           + ") passed all tests", "green")
             print(text)
+
+    def print_all_test_results(self):
+        print("Results for all tests in this loop")
+        for test in self.tests_to_run:
+            self.print_one_test_result(test)
         print(globals.terminator)
+
 
 # create app object -- this kicks everything off
 if __name__ == "__main__":

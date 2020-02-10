@@ -105,6 +105,8 @@ class Test:
         self.shadow_handler = shadow_handler
         self.skip_initial_update = skip_initial_update
         self.step = 0
+        self.failures = 0
+        self.status = TestStatus.RUNNING
         self.resume()
 
     # go on to next step in "resume()" state machine
