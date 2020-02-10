@@ -76,14 +76,15 @@ class TestSuite:
                 else:
                     print("Error - there is no test number " + str(index))
                     exit(2)
-        print(globals.terminator)
 
+        print(globals.terminator)
         test_str = "Running test"
         if len(self.tests_to_run) > 1:
             test_str += "s"
         for x in self.tests_to_run:
             test_str += " " + str(x.number)
         print(test_str)
+        print(globals.terminator)
 
         # connect to AWS IoT
         connection = Connection()
@@ -96,6 +97,7 @@ class TestSuite:
     def run_test(self, skip_initial_update):
        curtest = self.tests_to_run[self.current_index]
        print("Start test " + str(curtest.number) + " - " + curtest.name)
+       print(globals.terminator)
        self.current_status = TestStatus.RUNNING
        curtest.run(self.args, self.shadow_handler, skip_initial_update)
 
@@ -106,7 +108,7 @@ class TestSuite:
             if self.current_status == TestStatus.IDLE:
                 self.current_status = TestStatus.RUNNING
                 self.current_test_index = 0
-                print(globals.terminator)
+                # print(globals.terminator)
                 self.run_test(self.initial_update_was_done)
 
             # if a test is currently running...
