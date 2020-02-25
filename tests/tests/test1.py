@@ -16,31 +16,10 @@ class Test1(Test):
                          "Update Frequency",
             "Verify that device checks the shadow in the cloud periodically, and that valve state is never unknown")
 
-    # step 0
-    def prepare_for_test(self):
-        super().prepare_for_test()
+    # steps 0-9
+    # see test.py
 
-    # step 1
-    def send_first_update(self):
-        super(). send_first_update()
-
-    # step 2
-    def verify_first_update(self):
-        super().verify_first_update()
-
-    # step 3
-    def send_first_get(self):
-        super().send_first_get()
-
-    # step 4
-    def verify_first_get(self):
-        super().verify_first_get()
-
-    # step 5
-    def delay_before_iteration(self):
-        super().delay_before_iteration()
-
-    # step 6
+    # step 10
     def run_one_iteration(self):
         super().run_one_iteration()
         # register to receive all update messages
@@ -48,7 +27,7 @@ class Test1(Test):
         print("\rWaiting for device to update the shadow, iteration " + str(self.iteration + 1))
         self.advance()
 
-    # step 7
+    # step 11
     def verify_one_iteration(self):
         super().verify_one_iteration()
 
@@ -60,11 +39,5 @@ class Test1(Test):
             self.check_valve_params()
             self.advance()
 
-    # step 8
-    def loop_back(self):
-        super().loop_back()
-
-    # step 9
-    def finish_test(self):
-        super().finish_test()
-
+    # steps 12-13
+    # see test.py

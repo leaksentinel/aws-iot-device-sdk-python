@@ -35,31 +35,7 @@ class Test2(Test):
         super().__init__(2,
                          "Change Single Parameter",
                          "Verify that the device responds to requests to change a single parameter")
-    # step 0
-    def prepare_for_test(self):
-        super().prepare_for_test()
-
-    # step 1
-    def send_first_update(self):
-        super(). send_first_update()
-
-    # step 2
-    def verify_first_update(self):
-        super().verify_first_update()
-
-    # step 3
-    def send_first_get(self):
-        super().send_first_get()
-
-    # step 4
-    def verify_first_get(self):
-        super().verify_first_get()
-
-    # step 5
-    def delay_before_iteration(self):
-        super().delay_before_iteration()
-
-    # step 6
+    # step 10
     def run_one_iteration(self):
         super().run_one_iteration()
 
@@ -89,7 +65,7 @@ class Test2(Test):
             # wait for reply
             self.advance()
 
-    # step 7
+    # step 11
     def verify_one_iteration(self):
         if globals.update_accepted:
             globals.update_accepted = False
@@ -105,20 +81,14 @@ class Test2(Test):
                     print(globals.separator)
                     self.advance()
 
-        elif self.step == 7:
+        elif self.step == 11:
             # display timer while we wait
             if self.cycle_start != None:
                 self.display_cycle_timer()
 
-    # step 8
-    def loop_back(self):
-        super().loop_back()
-
-    # step 9
-    def finish_test(self):
-        super().finish_test()
+    # step 12-13
+    # see test.py
 
     def get_current_item(self):
         index = self.iteration % len(test_params)
         return test_params[index]
-

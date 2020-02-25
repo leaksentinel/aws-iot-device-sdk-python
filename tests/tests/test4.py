@@ -22,31 +22,10 @@ class Test4(Test):
         super().__init__(4,
                          "Open and Close Valve",
                          "Verify that the device responds to requests to open and close the valve")
-    # step 0
-    def prepare_for_test(self):
-        super().prepare_for_test()
+    # steps 0-9
+    # see test.py
 
-    # step 1
-    def send_first_update(self):
-        super(). send_first_update()
-
-    # step 2
-    def verify_first_update(self):
-        super().verify_first_update()
-
-    # step 3
-    def send_first_get(self):
-        super().send_first_get()
-
-    # step 4
-    def verify_first_get(self):
-        super().verify_first_get()
-
-    # step 5
-    def delay_before_iteration(self):
-        super().delay_before_iteration()
-
-    # step 6
+    # step 10
     def run_one_iteration(self):
         super().run_one_iteration()
 
@@ -112,11 +91,5 @@ class Test4(Test):
             if self.cycle_start != None:
                 self.display_cycle_timer()
 
-    # step 8
-    def loop_back(self):
-        super().loop_back()
-
-    # step 9
-    def finish_test(self):
-        super().finish_test()
-
+    # step 12-13
+    # see test.py

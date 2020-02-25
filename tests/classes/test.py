@@ -399,7 +399,7 @@ class Test:
 
     # step 10
     def run_one_iteration(self):
-        # nothing to do in base class
+        # nothing to do in base class -- this is where the subclass does its thing
         return
 
     # step 11
