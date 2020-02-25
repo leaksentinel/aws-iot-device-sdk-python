@@ -40,20 +40,20 @@ class Test3(Test):
         super().prepare_for_test()
 
     # step 1
-    def send_initial_update(self):
-        super(). send_initial_update()
+    def send_first_update(self):
+        super(). send_first_update()
 
     # step 2
-    def verify_initial_update(self):
-        super().verify_initial_update()
+    def verify_first_update(self):
+        super().verify_first_update()
 
     # step 3
-    def send_initial_get(self):
-        super().send_initial_get()
+    def send_first_get(self):
+        super().send_first_get()
 
     # step 4
-    def verify_initial_get(self):
-        super().verify_initial_get()
+    def verify_first_get(self):
+        super().verify_first_get()
 
     # step 5
     def delay_before_iteration(self):

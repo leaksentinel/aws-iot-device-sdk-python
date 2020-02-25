@@ -44,24 +44,28 @@ class TestSuite:
         parser.add_argument('numbers', metavar='n', nargs='*', type=int, help='Test numbers (e.g. 1 2 3 4)')
         parser.add_argument("-a", "--all", action="store_true", dest="run_all", default=False,
                             help="Run all tests")
+        parser.add_argument("-b", "--battery", action="store_true", dest="battery", default=False,
+                            help="True if running on battery power -- AC power is not connected")
+        parser.add_argument("-t", "--timecode", action="store_true", dest="timecode", default=False,
+                            help="Display 'wall clock' timecode on console")
+        parser.add_argument("-u", "--unix_timecode", action="store_true", dest="unix_timecode", default=False,
+                            help="Display UNIX-style timecode on console")
+        parser.add_argument("-l", "--loops", action="store", dest="loops", type=int, default=1,
+                            help="Number of times to repeat the suite of tests")
+        parser.add_argument("-i", "--iterations", action="store", dest="iterations", type=int,
+                            help="Number of times to repeat a single test", default=10)
+        parser.add_argument("-c", "--cycles", action="store", dest="cycles", type=int,
+                            help="Number of times to repeat a sleep/wait cycle before timing out", default=2)
         parser.add_argument("-f", "--connect_not_flowing", action="store", dest="connect_not_flowing", type=int,
                             help="Seconds to wait before connecting", default=30)
         parser.add_argument("-s", "--sleep_multiplier", action="store", dest="sleep_multiplier", type=int,
                             help="Multiply this by connectNotFlowing to get seconds until sleep", default=4)
-        parser.add_argument("-b", "--battery", action="store_true", dest="battery", default=False,
-                            help="True if running on battery power -- AC power is not connected")
-        parser.add_argument("-i", "--iterations", action="store", dest="iterations", type=int,
-                            help="Number of times to iterate test", default=10)
-        parser.add_argument("-c", "--cycles", action="store", dest="cycles", type=int,
-                            help="Number of sleep/wake cycles per iteration", default=2)
         parser.add_argument("-r", "--random", action="store_true", dest="random", default=False,
                             help="Wait a random number of seconds between iterations")
         parser.add_argument("-d", "--delay", action="store", dest="delay", type=float,
                             help="Amount to delay before next iteration", default=0.0)
         parser.add_argument("-o", "--offset", action="store", dest="offset", type=float,
                             help="Amount to add to delay per iterations", default=0.0)
-        parser.add_argument("-l", "--loops", action="store", dest="loops", type=int, default=1,
-                            help="Number of times to repeat test")
 
         # create an Args object that contains the parameter values parsed from command line
         self.args = Args(parser)
@@ -83,7 +87,8 @@ class TestSuite:
             test_str += "s"
         for x in self.tests_to_run:
             test_str += " " + str(x.number)
-        print(test_str)
+        title = colored(test_str, "blue")
+        print(title)
         print(globals.terminator)
 
         # connect to AWS IoT
@@ -94,15 +99,17 @@ class TestSuite:
         self.shadow_handler = self.shadow_client.createShadowHandlerWithName(connection.thing_name, True)
 
     # run one test in the suite
-    def run_test(self, skip_initial_update):
+    def run_test(self, skip_first_update):
        curtest = self.tests_to_run[self.current_index]
        if self.args.loops > 1:
-           print("Start Loop " + str(self.loop + 1) + ", Test " + str(curtest.number) + " - " + curtest.name)
+           test_str = ("Start Loop " + str(self.loop + 1) + ", Test " + str(curtest.number) + " - " + curtest.name)
        else:
-           print("Start Test " + str(curtest.number) + " - " + curtest.name)
+           test_str = ("Start Test " + str(curtest.number) + " - " + curtest.name)
+       title = colored(test_str, "blue")
+       print(title)
        print(globals.terminator)
        self.current_status = TestStatus.RUNNING
-       curtest.run(self.args, self.shadow_handler, skip_initial_update)
+       curtest.run(self.args, self.shadow_handler, skip_first_update)
 
     # main loop of runtest app
     def runLoop(self):
