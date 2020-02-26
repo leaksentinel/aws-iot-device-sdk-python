@@ -16,7 +16,7 @@ class Globals:
         # incoming payload from MQTT message
         self.incoming_dict = {}
 
-        # outgoing payload from updates
+        # outgoing payload to MQTT message
         self.outgoing_dict = {}
 
         # global strings

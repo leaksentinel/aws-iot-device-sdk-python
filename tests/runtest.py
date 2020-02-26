@@ -12,6 +12,7 @@ from tests.tests.test1 import Test1
 from tests.tests.test2 import Test2
 from tests.tests.test3 import Test3
 from tests.tests.test4 import Test4
+from tests.tests.test5 import Test5
 from tests.classes.test import TestStatus
 from tests.classes.args import Args
 from tests.classes.connection import Connection
@@ -28,7 +29,7 @@ logger.addHandler(streamHandler)
 
 class TestSuite:
     def __init__(self):
-        self.tests = [Test1(), Test2(), Test3(), Test4()]   # array of tests that can be run
+        self.tests = [Test1(), Test2(), Test3(), Test4(), Test5()]   # array of tests that can be run
 
         self.shadow_client = None               # the aws iot shadow client
         self.shadow_handler = None              # the aws iot shadow handler

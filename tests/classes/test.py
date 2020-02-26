@@ -311,7 +311,7 @@ class Test:
 
     # step 7 send an empty "get" request to fetch the entire shadow
     def send_second_get(self):
-        print("Sending second 'get' request to Shadow")
+        print("Sending 'get' request to Shadow")
         globals.get_accepted = False
         self.poll_start = datetime.datetime.now()
         self.shadow_handler.shadowGet(callback_my_shadow_get, 5)

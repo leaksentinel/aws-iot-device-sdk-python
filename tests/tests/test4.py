@@ -1,4 +1,4 @@
-# test2.py
+# test4.py
 # Created 25 Jan 2020
 # By J K Thomson
 # Copyright (c) 2020 LeakSentinel, Inc.
@@ -65,7 +65,7 @@ class Test4(Test):
         # wait for reply
         self.advance()
 
-    # step 7
+    # step 11
     def verify_one_iteration(self):
         if globals.update_accepted:
             globals.update_accepted = False
@@ -86,7 +86,7 @@ class Test4(Test):
                 print(globals.separator)
                 self.advance()
 
-        elif self.step == 7:
+        elif self.step == 11:
             # display timer while we wait
             if self.cycle_start != None:
                 self.display_cycle_timer()
