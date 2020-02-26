@@ -68,7 +68,7 @@ class Test5(Test):
 
     def wifi_button_release(self):
         print("wifi_button_release")
-        self._url("https://o1.prota.space/mib/do/release?_id=69ce2a6ade53c6aae168fa1785d1b450")
+        self.access_url("https://o1.prota.space/mib/do/release?_id=69ce2a6ade53c6aae168fa1785d1b450")
 
     # step 0
     def prepare_for_test(self):
@@ -192,8 +192,12 @@ class Test5(Test):
             item.get_reported_value_from_json_dict()
 
             if entry['direction'] == int(item.reported_value):
+                if entry['direction'] == self.OPEN:
+                    dir_str = "OPEN"
+                else:
+                    dir_str = "CLOSED"
                 duration = datetime.datetime.now() - self.cycle_start
-                print("\rValve state was successfully changed"\
+                print("\rValve state was reported as " + dir_str \
                       + " (" + self.format_time(duration) + ")")
                 print(globals.separator)
                 self.advance()
