@@ -13,6 +13,7 @@ class Args:
         self.numbers = cmd.numbers
         self.run_all = cmd.run_all
         self.battery = cmd.battery
+        self.valve_type = cmd.valve_type
         self.timecode = cmd.timecode
         self.unix_timecode = cmd.unix_timecode
         self.loops = cmd.loops

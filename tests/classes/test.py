@@ -36,6 +36,7 @@ class Test:
         self.connect_not_flowing = 30           # shadow value written to shadow at start of first test
         self.sleep_multiplier = 4               # shadow value written to shadow at start of first test
         self.battery = False                    # the device is not plugged in, i.e. running on batteries
+        self.valve_type = 1                     # valve ty[e (1=gate, 2=ball) for tests 4 and 5 only
         self.delay = 0.0                        # how many seconds to wait until start of next iteration
         self.offset = 0.0                       # how many seconds to add to delay for each iteration
         self.iterations = 0                     # total number of iterations in test
@@ -78,6 +79,7 @@ class Test:
         self.offset = self.args.offset
         self.random = self.args.random
         self.battery = self.args.battery
+        self.valve_type = self.args.valve_type
 
         # force reasonable defaults
         if self.iterations < 1 or self.iterations > 9999:
@@ -134,16 +136,18 @@ class Test:
         self.cycle_start = datetime.datetime.now()
         self.cycle_end = None
 
-        # send request to update "connect_not_flowing" and "sleep_multiplier" values to shadow
+        # send request to update "valve_type", "connect_not_flowing" and "sleep_multiplier" values to shadow
+        vtype = shadow_items.valveType
+        vtype.desired_value = str(self.valve_type)
         item1 = shadow_items.wifiConnectNotFlowing
         item1.desired_value = str(self.connect_not_flowing)
         item2 = shadow_items.wifiConnectSleepMultiplier
         item2.desired_value = str(self.sleep_multiplier)
         globals.outgoing_dict = {}
-        item1.set_desired_values_to_json_dict([item1, item2])
+        item1.set_desired_values_to_json_dict([vtype, item1, item2])
         json_str = json.dumps(globals.outgoing_dict)
         globals.update_accepted = False
-        print("Sending first 'update' request to Shadow to set sleep parameters")
+        print("Sending first 'update' request to Shadow to set valve type and sleep parameters")
         self.shadow_handler.shadowUpdate(json_str, callback_my_shadow_update, 5)
         self.advance()
 
@@ -185,16 +189,20 @@ class Test:
     def verify_first_get(self):
         # look for flag that says 'get' was received
         if globals.get_accepted:
-            # yes, we got a 'get', check that our two valve params are not undfined
+            # yes, we got a 'get', check that our two valve params are not undefined
             globals.get_accepted = False
             self.check_valve_params()
 
             # now see if values have taken effect
+            vtype = shadow_items.valveType
             item1 = shadow_items.wifiConnectNotFlowing
             item2 = shadow_items.wifiConnectSleepMultiplier
-            if item1.get_reported_value_from_json_dict() and \
+            if vtype.get_reported_value_from_json_dict() and \
+                    item1.get_reported_value_from_json_dict() and \
                     item2.get_reported_value_from_json_dict():
-                if item1.desired_value == item1.reported_value and item2.desired_value == item2.reported_value:
+                if vtype.desired_value == vtype.reported_value and \
+                        item1.desired_value == item1.reported_value and \
+                        item2.desired_value == item2.reported_value:
                     print("'get' succeeded, connect_not_flowing = " + item1.reported_value \
                           + ", sleep_multiplier = " + item2.reported_value)
                     print(globals.separator)

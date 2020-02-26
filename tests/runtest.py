@@ -45,6 +45,8 @@ class TestSuite:
         parser.add_argument('numbers', metavar='n', nargs='*', type=int, help='Test numbers (e.g. 1 2 3 4)')
         parser.add_argument("-a", "--all", action="store_true", dest="run_all", default=False,
                             help="Run all tests")
+        parser.add_argument("-v", "--valve_type", action="store", dest="valve_type", type=int, default=1,
+                            help="Valve type (1=gate, 2=ball)")
         parser.add_argument("-b", "--battery", action="store_true", dest="battery", default=False,
                             help="True if running on battery power -- AC power is not connected")
         parser.add_argument("-t", "--timecode", action="store_true", dest="timecode", default=False,

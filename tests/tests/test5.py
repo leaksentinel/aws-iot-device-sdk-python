@@ -85,6 +85,11 @@ class Test5(Test):
 
         # if first 'get' completed ok, see what the current state of the valve is
         if self.step == 5:
+            if self.valve_type == 1:
+                print("Testing gate valve")
+            else:
+                print("Tasting ball valve")
+                
             # if valve is currently open, start our test with entry 1 (not 0) and wrap around test_matrix
             item = shadow_items.valveState
             if item.reported_value == "1":
