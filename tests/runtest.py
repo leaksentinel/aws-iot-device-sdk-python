@@ -38,7 +38,7 @@ class TestSuite:
         self.tests_to_run = []                  # list of tests to run, parsed from command line
         self.current_index = 0                  # the index (in tests_to_run) of the test currently running
         self.current_status = TestStatus.IDLE   # the status of the entire test suite
-        self.loop = 0                           # which loop we're on (a "loop" is one time through test_to_run
+        self.loop = 0                           # which loop we're on (a "loop" is one time through tests_to_run)
 
         # get arguments from command line
         parser = argparse.ArgumentParser()

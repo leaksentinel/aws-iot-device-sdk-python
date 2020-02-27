@@ -23,7 +23,7 @@ test_params = [
 class Test5(Test):
     def __init__(self):
         super().__init__(5,
-                         "Button-Shadow Open-Close",
+                         "Button/Shadow Open/Close",
                          "Verify all permutations of opening and closing valve, using buttons and shadow commands")
 
         self.button_is_pressed = False
@@ -82,13 +82,13 @@ class Test5(Test):
     def delay_before_iteration(self):
         if not self.delaying and self.iteration == 0:
 
-            # current valve state
+            # report current valve type
             if self.valve_type == 1:
                 print("Testing gate valve")
             else:
                 print("Tasting ball valve")
 
-            # if valve is currently open, start our test with entry 1 (not 0) and wrap around test_matrix
+            # if valve is currently open, start our test with entry 1 (not 0)
             item = shadow_items.valveState
             if item.reported_value == "1":
                 print("Valve is open to start this test")
@@ -101,7 +101,7 @@ class Test5(Test):
                 exit(4)
 
             # remind them to start MicroBot app
-            txt = colored("Please make sure the Microbot app is running on your iPhone", "red")
+            txt = colored("Please make sure the Microbot app is running on your iPhone", "yellow")
             print(txt)
             print(globals.separator)
 
@@ -110,7 +110,6 @@ class Test5(Test):
     # step 10
     def run_one_iteration(self):
         super().run_one_iteration()
-
 
         # register to receive all update messages
         self.shadow_handler.shadowRegisterUpdateCallback(callback_any_shadow_update)
@@ -127,7 +126,7 @@ class Test5(Test):
             direction_str = "Opening"
         else:
             direction_str = "Closing"
-        print("\r" + direction_str + " valve using " + method_str)
+        print("\r" + direction_str + " valve using " + method_str + ", iteration " + str(self.iteration + 1))
 
         # if this matrix entry is a button press...
         if entry['method'] == self.BUTTON:
@@ -166,6 +165,7 @@ class Test5(Test):
             item.set_desired_value_to_json_dict()
 
             json_str = json.dumps(globals.outgoing_dict)
+            print(json_str)
             self.shadow_handler.shadowUpdate(json_str, callback_my_shadow_update, 5)
 
         # wait for shadow to update
