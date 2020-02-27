@@ -86,6 +86,8 @@ class Test:
             self.iterations = 10
         if self.cycles < 1 or self.cycles > 99:
             self.cycles = 2
+        if self.valve_type < 1 or self.valve_type > 2:
+            self.valve_type = 1
         if not self.args.battery:
             self.cycle_duration = 61.0
         else:

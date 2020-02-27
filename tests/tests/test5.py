@@ -8,6 +8,7 @@ import datetime
 import urllib.request
 import urllib.error
 
+from termcolor import colored
 from tests.classes.shadow import shadow_items
 from tests.classes.globals import globals
 from tests.classes.test import Test
@@ -45,7 +46,6 @@ class Test5(Test):
         ]
 
         self.matrix_index = 0
-        self.matrix_count = 0
 
     def access_url(self,req):
         try:
@@ -74,22 +74,20 @@ class Test5(Test):
     def prepare_for_test(self):
         super().prepare_for_test()
         self.matrix_index = 0
-        self.matrix_count = 0
 
-    # steps 1-3
+    # steps 1-8
     # see test.py
 
-    # step 4
-    def verify_first_get(self):
-        super().verify_first_get()
+    # step 9
+    def delay_before_iteration(self):
+        if not self.delaying and self.iteration == 0:
 
-        # if first 'get' completed ok, see what the current state of the valve is
-        if self.step == 5:
+            # current valve state
             if self.valve_type == 1:
                 print("Testing gate valve")
             else:
                 print("Tasting ball valve")
-                
+
             # if valve is currently open, start our test with entry 1 (not 0) and wrap around test_matrix
             item = shadow_items.valveState
             if item.reported_value == "1":
@@ -102,12 +100,17 @@ class Test5(Test):
                 print("Valve is neither open nor closed?!?")
                 exit(4)
 
-    # step 5-9
-    # see test.py
+            # remind them to start MicroBot app
+            txt = colored("Please make sure the Microbot app is running on your iPhone", "red")
+            print(txt)
+            print(globals.separator)
+
+        super().delay_before_iteration()
 
     # step 10
     def run_one_iteration(self):
         super().run_one_iteration()
+
 
         # register to receive all update messages
         self.shadow_handler.shadowRegisterUpdateCallback(callback_any_shadow_update)
@@ -215,12 +218,7 @@ class Test5(Test):
         self.matrix_index += 1
         if self.matrix_index >= len(self.test_matrix):
             self.matrix_index = 0
-        self.matrix_count += 1
-        if self.matrix_count >= len(self.test_matrix):
-            # finished one iteration of this test
-            super().loop_back()
-        else:
-            self.step = 9
+        super().loop_back()
 
     # step 13
     # see test.py
